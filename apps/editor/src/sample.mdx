@@ -1,0 +1,38 @@
+# Plannar Editor
+
+A comprehensive MDX renderer with state binding playgrounds.
+
+## Features
+
+- **GitHub Flavored Markdown** via `remark-gfm`
+- **Syntax highlighting** via `rehype-pretty-code`
+- **Auto-linked headings** via `rehype-autolink-headings`
+
+### Code Example
+
+```ts
+function hello(name: string): string {
+  return `Hello, ${name}!`;
+}
+```
+
+### GFM Table
+
+| Feature | Status |
+| ------- | ------ |
+| GFM     | ✓      |
+| Code    | ✓      |
+| State   | ✓      |
+
+## Playground
+
+<Playground>
+  <input bind="text:'Hello world'" placeholder="Type something..." />
+  <p>You typed: {text}</p>
+</Playground>
+
+<Playground>
+  <button bind="count:0" onClick={() => setCount(count + 1)}>
+    Clicked {count} times
+  </button>
+</Playground>
