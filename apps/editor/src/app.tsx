@@ -2,7 +2,7 @@ import Content from "./sample.mdx";
 
 export function App() {
   return (
-    <main>
+    <main className="mdx-content">
       <Content />
     </main>
   );

@@ -1,5 +1,6 @@
 import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { generateMdx } from "@plannar/core";
 
 const mdxPlugin = {
@@ -17,7 +18,7 @@ const mdxPlugin = {
 
 export default defineConfig({
   root: "apps/editor",
-  plugins: [react(), mdxPlugin],
+  plugins: [tailwindcss(), react(), mdxPlugin],
   staged: {
     "*": "vp check --fix",
   },
