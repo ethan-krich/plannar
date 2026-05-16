@@ -26,13 +26,32 @@ function hello(name: string): string {
 
 ## Playground
 
+`<input>` with `bind="text:'Hello world'"` auto-wires `value` + `onChange`:
+
 <Playground>
   <input bind="text:'Hello world'" placeholder="Type something..." />
   <p>You typed: {text}</p>
 </Playground>
 
+`<button>` with `bind="count:0"` creates state only — you wire `onClick` manually:
+
 <Playground>
   <button bind="count:0" onClick={() => setCount(count + 1)}>
     Clicked {count} times
   </button>
+</Playground>
+
+Checkbox with `bind="checked:true"` auto-wires `checked` + `onChange`:
+
+<Playground>
+  <label>
+    <input type="checkbox" bind="checked:true" /> Toggle me ({String(checked)})
+  </label>
+</Playground>
+
+Number input with `bind="amount:10"` auto-wires `value` + `onChange`:
+
+<Playground>
+  <input type="number" bind="amount:10" />
+  <p>Amount: {amount}</p>
 </Playground>

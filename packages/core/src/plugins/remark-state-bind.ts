@@ -1,5 +1,6 @@
 import { Parser } from "acorn";
 import acornJsx from "acorn-jsx";
+import { htmlBindings } from "./meta.js";
 
 interface AstNode {
   type: string;
@@ -75,7 +76,7 @@ function transformPlayground(
     throw new Error(`Duplicate bind names in <Playground>: ${[...new Set(dupes)].join(", ")}`);
   }
 
-  removeBindAttrs(playground);
+  applyBindings(playground, binds);
 
   const counter = playgroundCounter++;
   const componentName = `_PlannarPlayground_${counter}`;
@@ -167,17 +168,93 @@ function collectBinds(node: AstNode, owningPlayground: AstNode): BindEntry[] {
   return binds;
 }
 
-function removeBindAttrs(node: AstNode): void {
+function applyBindings(node: AstNode, binds: BindEntry[]): void {
+  const bindNameSet = new Set(binds.map((b) => b.name));
+
   if (Array.isArray(node.attributes)) {
-    node.attributes = node.attributes.filter(
-      (a: AstNode) => !(a.type === "mdxJsxAttribute" && a.name === "bind"),
-    );
-  }
-  if (Array.isArray(node.children)) {
-    for (const child of node.children) {
-      removeBindAttrs(child);
+    const attrs = node.attributes as AstNode[];
+    for (let i = attrs.length - 1; i >= 0; i--) {
+      const attr = attrs[i];
+      if (attr.type === "mdxJsxAttribute" && attr.name === "bind") {
+        const parsed = parseBindValue(attr);
+        if (parsed && bindNameSet.has(parsed.name)) {
+          const elName = String(node.name || "").toLowerCase();
+          const typeAttr = attrs.find(
+            (a: AstNode) => a.type === "mdxJsxAttribute" && a.name === "type",
+          );
+          const inputType = typeAttr ? String(typeAttr.value ?? "text") : "";
+          const replacement = bindingAttrs(elName, inputType, parsed.name);
+          attrs.splice(i, 1, ...replacement);
+        } else {
+          attrs.splice(i, 1);
+        }
+      }
     }
   }
+
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      applyBindings(child, binds);
+    }
+  }
+}
+
+function parseBindValue(attr: AstNode): { name: string; initialValue: string } | null {
+  const raw = parseAttrValue(attr);
+  if (!raw) return null;
+  const colonIdx = raw.indexOf(":");
+  if (colonIdx === -1) {
+    return { name: raw, initialValue: "undefined" };
+  }
+  return {
+    name: raw.slice(0, colonIdx),
+    initialValue: raw.slice(colonIdx + 1) || "undefined",
+  };
+}
+
+function parseAttrValue(attr: AstNode): string | null {
+  const v = attr.value;
+  if (
+    typeof v === "object" &&
+    v !== null &&
+    (v as AstNode).type === "mdxJsxAttributeValueExpression"
+  ) {
+    return String((v as AstNode).value ?? "");
+  }
+  if (typeof v === "string") return v;
+  if (v == null) return "";
+  return null;
+}
+
+function bindingAttrs(elName: string, inputType: string, name: string): AstNode[] {
+  const key = inputType ? `${elName}:${inputType}` : elName;
+  const meta = htmlBindings[key] ?? htmlBindings[elName];
+  if (!meta) return [];
+
+  const setter = `set${capitalize(name)}`;
+  const valueExpr = meta.inject ? meta.inject.replace(/\bv\b/g, name) : name;
+
+  return [
+    exprAttr(meta.valueProp, valueExpr),
+    exprAttr(meta.changeProp, `(e) => ${setter}(${meta.extract})`),
+  ];
+}
+
+function exprAttr(name: string, expr: string): AstNode {
+  const estree = _parser.parse(expr, {
+    ecmaVersion: "latest" as any,
+    sourceType: "module",
+    locations: true,
+  });
+  return {
+    type: "mdxJsxAttribute",
+    name,
+    value: {
+      type: "mdxJsxAttributeValueExpression",
+      value: expr,
+      data: { estree },
+    },
+  };
 }
 
 function serializeNode(node: AstNode): string {
