@@ -9,7 +9,12 @@
   ],
   "type": "module",
   "exports": {
-    ".": "./dist/index.mjs",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
     "./styles/mdx.css": {
       "import": "./src/styles/mdx.css",
       "default": "./src/styles/mdx.css"
