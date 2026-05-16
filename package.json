@@ -9,6 +9,8 @@
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@plannar/core": "workspace:*",
+    "@vitejs/plugin-react": "^4.6.0",
     "vite-plus": "catalog:"
   },
   "engines": {

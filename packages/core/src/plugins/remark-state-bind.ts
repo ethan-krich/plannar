@@ -86,7 +86,7 @@ function transformPlayground(
     .map((b) => `const [${b.name}, set${capitalize(b.name)}] = useState(${b.initialValue})`)
     .join("\n  ");
 
-  const esmCode = `function ${componentName}() {\n  ${stateDecls ? stateDecls + "\n  " : ""}return (<Playground>\n${indent(childrenJsx)}\n</Playground>)\n}`;
+  const esmCode = `function ${componentName}() {\n  ${stateDecls ? stateDecls + "\n  " : ""}return (<>\n${indent(childrenJsx)}\n</>)\n}`;
 
   if (stateDecls && !useStateImportAdded) {
     useStateImportAdded = true;
