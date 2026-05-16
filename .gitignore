@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# AI agent worktrees
+# AI agents
 .claude/worktrees/
+.playwright-mcp
