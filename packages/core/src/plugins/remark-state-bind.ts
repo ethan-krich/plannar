@@ -14,6 +14,11 @@ interface BindEntry {
   initialValue: string;
 }
 
+interface TransformState {
+  counter: number;
+  importAdded: boolean;
+}
+
 const _parser = Parser.extend(acornJsx());
 
 function parseEsm(code: string): any {
@@ -24,16 +29,15 @@ function parseEsm(code: string): any {
   });
 }
 
-let playgroundCounter = 0;
-let useStateImportAdded = false;
-
 export const remarkStateBind = () => {
-  return (tree: AstNode) => {
-    playgroundCounter = 0;
-    useStateImportAdded = false;
-    visitAndTransform(tree, tree);
+  const state: TransformState = { counter: 0, importAdded: false };
 
-    if (useStateImportAdded) {
+  return (tree: AstNode) => {
+    state.counter = 0;
+    state.importAdded = false;
+    visitAndTransform(tree, tree, state);
+
+    if (state.importAdded) {
       tree.children!.unshift({
         type: "mdxjsEsm",
         value: `import { useState } from "react"`,
@@ -43,20 +47,20 @@ export const remarkStateBind = () => {
   };
 };
 
-function visitAndTransform(node: AstNode, root: AstNode): void {
+function visitAndTransform(node: AstNode, root: AstNode, state: TransformState): void {
   if (!node.children) return;
 
   for (let i = node.children.length - 1; i >= 0; i--) {
     const child = node.children[i];
     if (child.children) {
-      visitAndTransform(child, root);
+      visitAndTransform(child, root, state);
     }
   }
 
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
     if (child.type === "mdxJsxFlowElement" && child.name === "Playground") {
-      const transformed = transformPlayground(child as AstNode, node.children, i, root);
+      const transformed = transformPlayground(child as AstNode, node.children, i, root, state);
       i += transformed.indexOffset;
     }
   }
@@ -67,6 +71,7 @@ function transformPlayground(
   siblings: AstNode[],
   index: number,
   root: AstNode,
+  state: TransformState,
 ): { indexOffset: number } {
   const binds = collectBinds(playground, playground);
 
@@ -78,7 +83,7 @@ function transformPlayground(
 
   applyBindings(playground, binds);
 
-  const counter = playgroundCounter++;
+  const counter = state.counter++;
   const componentName = `_PlannarPlayground_${counter}`;
 
   const childrenJsx = (playground.children || []).map(serializeNode).join("\n");
@@ -89,8 +94,8 @@ function transformPlayground(
 
   const esmCode = `function ${componentName}() {\n  ${stateDecls ? stateDecls + "\n  " : ""}return (<>\n${indent(childrenJsx)}\n</>)\n}`;
 
-  if (stateDecls && !useStateImportAdded) {
-    useStateImportAdded = true;
+  if (stateDecls && !state.importAdded) {
+    state.importAdded = true;
   }
 
   const estree = parseEsm(esmCode);
