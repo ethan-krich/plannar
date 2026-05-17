@@ -1,3 +1,7 @@
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 # Plannar Editor
 
 A comprehensive MDX renderer with state binding playgrounds.
@@ -7,6 +11,7 @@ A comprehensive MDX renderer with state binding playgrounds.
 - **GitHub Flavored Markdown** via `remark-gfm`
 - **Syntax highlighting** via `rehype-pretty-code`
 - **Auto-linked headings** via `rehype-autolink-headings`
+- **shadcn/ui** components in playgrounds
 
 ### Code Example
 
@@ -26,32 +31,32 @@ function hello(name: string): string {
 
 ## Playground
 
-`<input>` with `bind="text:'Hello world'"` auto-wires `value` + `onChange`:
+`<Input>` with `bind="text:'Hello world'"` auto-wires `value` + `onChange`:
 
 <Playground>
-  <input bind="text:'Hello world'" placeholder="Type something..." />
+  <Input bind="text:'Hello world'" placeholder="Type something..." />
   <p>You typed: {text}</p>
 </Playground>
 
-`<button>` with `bind="count:0"` creates state only — you wire `onClick` manually:
+`<Button>` with `bind="count:0"` creates state only — you wire `onClick` manually:
 
 <Playground>
-  <button bind="count:0" onClick={() => setCount(count + 1)}>
+  <Button bind="count:0" onClick={() => setCount(count + 1)} variant="outline">
     Clicked {count} times
-  </button>
+  </Button>
 </Playground>
 
-Checkbox with `bind="checked:true"` auto-wires `checked` + `onChange`:
+`<Checkbox>` with `bind="checked:true"` auto-wires `checked` + `onCheckedChange`:
 
 <Playground>
   <label>
-    <input type="checkbox" bind="checked:true" /> Toggle me ({String(checked)})
+    <Checkbox bind="checked:true" /> Toggle me ({String(checked)})
   </label>
 </Playground>
 
-Number input with `bind="amount:10"` auto-wires `value` + `onChange`:
+Number `<Input>` with `bind="amount:10"` auto-wires `value` + `onChange`:
 
 <Playground>
-  <input type="number" bind="amount:10" />
+  <Input type="number" bind="amount:10" />
   <p>Amount: {amount}</p>
 </Playground>

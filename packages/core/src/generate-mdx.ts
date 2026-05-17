@@ -5,12 +5,18 @@ import remarkGfm from "remark-gfm";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { remarkStateBind } from "./plugins/remark-state-bind.js";
+import type { BindingMeta } from "./plugins/meta.js";
+
+export interface GenerateMdxOptions extends CompileOptions {
+  content?: string;
+  bindings?: Record<string, BindingMeta>;
+}
 
 export async function generateMdx(
   filepath: string,
-  options: CompileOptions & { content?: string } = {},
+  options: GenerateMdxOptions = {},
 ): Promise<string> {
-  const { content, ...mdxOptions } = options;
+  const { content, bindings, ...mdxOptions } = options;
   const absolutePath = resolve(filepath);
   const value = content ?? (await readFile(absolutePath, "utf-8"));
 
@@ -19,7 +25,11 @@ export async function generateMdx(
     {
       development: false,
       ...mdxOptions,
-      remarkPlugins: [remarkStateBind, remarkGfm, ...(mdxOptions.remarkPlugins ?? [])],
+      remarkPlugins: [
+        [remarkStateBind, { bindings }],
+        remarkGfm,
+        ...(mdxOptions.remarkPlugins ?? []),
+      ],
       rehypePlugins: [
         rehypePrettyCode,
         rehypeAutolinkHeadings,

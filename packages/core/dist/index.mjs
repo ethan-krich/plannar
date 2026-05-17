@@ -48,12 +48,19 @@ function parseEsm(code) {
     locations: true,
   });
 }
-const remarkStateBind = () => {
-  const state = { counter: 0, importAdded: false };
+const remarkStateBind = (options) => {
+  const bindings = {
+    ...htmlBindings,
+    ...options?.bindings,
+  };
+  const state = {
+    counter: 0,
+    importAdded: false,
+  };
   return (tree) => {
     state.counter = 0;
     state.importAdded = false;
-    visitAndTransform(tree, tree, state);
+    visitAndTransform(tree, tree, state, bindings);
     if (state.importAdded)
       tree.children.unshift({
         type: "mdxjsEsm",
@@ -62,27 +69,27 @@ const remarkStateBind = () => {
       });
   };
 };
-function visitAndTransform(node, root, state) {
+function visitAndTransform(node, root, state, bindings) {
   if (!node.children) return;
   for (let i = node.children.length - 1; i >= 0; i--) {
     const child = node.children[i];
-    if (child.children) visitAndTransform(child, root, state);
+    if (child.children) visitAndTransform(child, root, state, bindings);
   }
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
     if (child.type === "mdxJsxFlowElement" && child.name === "Playground") {
-      const transformed = transformPlayground(child, node.children, i, root, state);
+      const transformed = transformPlayground(child, node.children, i, root, state, bindings);
       i += transformed.indexOffset;
     }
   }
 }
-function transformPlayground(playground, siblings, index, root, state) {
+function transformPlayground(playground, siblings, index, root, state, bindings) {
   const binds = collectBinds(playground, playground);
   const names = binds.map((b) => b.name);
   const dupes = names.filter((n, i) => names.indexOf(n) !== i);
   if (dupes.length > 0)
     throw new Error(`Duplicate bind names in <Playground>: ${[...new Set(dupes)].join(", ")}`);
-  applyBindings(playground, binds);
+  applyBindings(playground, binds, bindings);
   const componentName = `_PlannarPlayground_${state.counter++}`;
   const childrenJsx = (playground.children || []).map(serializeNode).join("\n");
   const stateDecls = binds
@@ -155,7 +162,7 @@ function collectBinds(node, owningPlayground) {
     for (const child of node.children) binds.push(...collectBinds(child, owningPlayground));
   return binds;
 }
-function applyBindings(node, binds) {
+function applyBindings(node, binds, bindings) {
   const bindNameSet = new Set(binds.map((b) => b.name));
   if (Array.isArray(node.attributes)) {
     const attrs = node.attributes;
@@ -170,13 +177,15 @@ function applyBindings(node, binds) {
             elName,
             typeAttr ? String(typeAttr.value ?? "text") : "",
             parsed.name,
+            bindings,
           );
           attrs.splice(i, 1, ...replacement);
         } else attrs.splice(i, 1);
       }
     }
   }
-  if (Array.isArray(node.children)) for (const child of node.children) applyBindings(child, binds);
+  if (Array.isArray(node.children))
+    for (const child of node.children) applyBindings(child, binds, bindings);
 }
 function parseBindValue(attr) {
   const raw = parseAttrValue(attr);
@@ -200,8 +209,8 @@ function parseAttrValue(attr) {
   if (v == null) return "";
   return null;
 }
-function bindingAttrs(elName, inputType, name) {
-  const meta = htmlBindings[inputType ? `${elName}:${inputType}` : elName] ?? htmlBindings[elName];
+function bindingAttrs(elName, inputType, name, bindings) {
+  const meta = bindings[inputType ? `${elName}:${inputType}` : elName] ?? bindings[elName];
   if (!meta) return [];
   const setter = `set${capitalize(name)}`;
   const valueExpr = meta.inject ? meta.inject.replace(/\bv\b/g, name) : name;
@@ -313,18 +322,21 @@ function indent(text) {
 //#endregion
 //#region src/generate-mdx.ts
 async function generateMdx(filepath, options = {}) {
-  const { content, ...mdxOptions } = options;
+  const { content, bindings, ...mdxOptions } = options;
   const absolutePath = resolve(filepath);
-  const value = content ?? (await readFile(absolutePath, "utf-8"));
   const result = await compile(
     {
-      value,
+      value: content ?? (await readFile(absolutePath, "utf-8")),
       path: absolutePath,
     },
     {
       development: false,
       ...mdxOptions,
-      remarkPlugins: [remarkStateBind, remarkGfm, ...(mdxOptions.remarkPlugins ?? [])],
+      remarkPlugins: [
+        [remarkStateBind, { bindings }],
+        remarkGfm,
+        ...(mdxOptions.remarkPlugins ?? []),
+      ],
       rehypePlugins: [
         rehypePrettyCode,
         rehypeAutolinkHeadings,
@@ -336,17 +348,20 @@ async function generateMdx(filepath, options = {}) {
 }
 //#endregion
 //#region src/plugin.ts
-const mdxPlugin = {
-  name: "mdx",
-  async transform(code, id) {
-    if (id.endsWith(".mdx")) {
-      const compiled = await generateMdx(id, { content: code });
-      return {
-        code: compiled,
-        map: null,
-      };
-    }
-  },
-};
+function mdxPlugin(options) {
+  return {
+    name: "mdx",
+    async transform(code, id) {
+      if (id.endsWith(".mdx"))
+        return {
+          code: await generateMdx(id, {
+            content: code,
+            ...options,
+          }),
+          map: null,
+        };
+    },
+  };
+}
 //#endregion
-export { generateMdx, remarkStateBind, mdxPlugin };
+export { generateMdx, mdxPlugin, remarkStateBind };
