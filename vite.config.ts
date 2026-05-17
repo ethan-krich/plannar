@@ -1,20 +1,7 @@
 import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { generateMdx } from "@plannar/core";
-
-const mdxPlugin = {
-  name: "mdx",
-  async transform(code: string, id: string) {
-    if (id.endsWith(".mdx")) {
-      const compiled = await generateMdx(id, { content: code });
-      return {
-        code: compiled,
-        map: null,
-      };
-    }
-  },
-};
+import { mdxPlugin } from "@plannar/core";
 
 export default defineConfig({
   root: "apps/editor",
@@ -27,4 +14,4 @@ export default defineConfig({
   run: {
     cache: true,
   },
-} as any);
+});

@@ -335,4 +335,18 @@ async function generateMdx(filepath, options = {}) {
   return String(result.value);
 }
 //#endregion
-export { generateMdx, remarkStateBind };
+//#region src/plugin.ts
+const mdxPlugin = {
+  name: "mdx",
+  async transform(code, id) {
+    if (id.endsWith(".mdx")) {
+      const compiled = await generateMdx(id, { content: code });
+      return {
+        code: compiled,
+        map: null,
+      };
+    }
+  },
+};
+//#endregion
+export { generateMdx, remarkStateBind, mdxPlugin };

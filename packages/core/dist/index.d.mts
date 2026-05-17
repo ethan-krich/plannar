@@ -15,4 +15,10 @@ interface AstNode {
 }
 declare const remarkStateBind: () => (tree: AstNode) => void;
 //#endregion
-export { generateMdx, remarkStateBind };
+//#region src/plugin.d.ts
+declare const mdxPlugin: {
+  name: string;
+  transform(code: string, id: string): Promise<{ code: string; map: null } | undefined> | undefined;
+};
+//#endregion
+export { generateMdx, remarkStateBind, mdxPlugin };
