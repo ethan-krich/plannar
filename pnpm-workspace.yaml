@@ -30,4 +30,4 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 allowBuilds:
-  msw: set this to true or false
+  msw: true
