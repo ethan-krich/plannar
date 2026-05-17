@@ -1,0 +1,57 @@
+# Plannar Editor
+
+A comprehensive MDX renderer with state binding playgrounds.
+
+## Features
+
+- **GitHub Flavored Markdown** via `remark-gfm`
+- **Syntax highlighting** via `rehype-pretty-code`
+- **Auto-linked headings** via `rehype-autolink-headings`
+
+### Code Example
+
+```ts
+function hello(name: string): string {
+  return `Hello, ${name}!`;
+}
+```
+
+### GFM Table
+
+| Feature | Status |
+| ------- | ------ |
+| GFM     | ✓      |
+| Code    | ✓      |
+| State   | ✓      |
+
+## Playground
+
+`<input>` with `bind="text:'Hello world'"` auto-wires `value` + `onChange`:
+
+<Playground>
+  <input bind="text:'Hello world'" placeholder="Type something..." />
+  <p>You typed: {text}</p>
+</Playground>
+
+`<button>` with `bind="count:0"` creates state only — you wire `onClick` manually:
+
+<Playground>
+  <button bind="count:0" onClick={() => setCount(count + 1)}>
+    Clicked {count} times
+  </button>
+</Playground>
+
+Checkbox with `bind="checked:true"` auto-wires `checked` + `onChange`:
+
+<Playground>
+  <label>
+    <input type="checkbox" bind="checked:true" /> Toggle me ({String(checked)})
+  </label>
+</Playground>
+
+Number input with `bind="amount:10"` auto-wires `value` + `onChange`:
+
+<Playground>
+  <input type="number" bind="amount:10" />
+  <p>Amount: {amount}</p>
+</Playground>

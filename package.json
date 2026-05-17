@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run website#dev",
+    "dev": "vp run editor#dev",
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@plannar/core": "workspace:*",
+    "@tailwindcss/vite": "^4.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
     "vite-plus": "catalog:"
   },
   "engines": {

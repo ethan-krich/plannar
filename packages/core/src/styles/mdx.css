@@ -1,0 +1,279 @@
+/* MDX Content Styles — shadcn/ui defaults, never overrides inline Tailwind */
+
+.mdx-content {
+  --mdx-body: var(--color-zinc-700, oklch(0.37 0.013 285.805));
+  --mdx-heading: var(--color-zinc-950, oklch(0.141 0.005 285.823));
+  --mdx-muted: var(--color-zinc-500, oklch(0.552 0.016 285.938));
+  --mdx-border: var(--color-zinc-200, oklch(0.92 0.004 286.32));
+  --mdx-code-bg: var(--color-zinc-950, oklch(0.141 0.005 285.823));
+  --mdx-code-text: var(--color-zinc-100, oklch(0.967 0.001 286.375));
+  --mdx-inline-code-bg: var(--color-zinc-100, oklch(0.967 0.001 286.375));
+  --mdx-inline-code-text: var(--color-zinc-800, oklch(0.274 0.006 286.033));
+  --mdx-link: var(--color-zinc-900, oklch(0.21 0.006 285.885));
+  --mdx-table-header-bg: var(--color-zinc-50, oklch(0.985 0 0));
+  --mdx-table-hover: var(--color-zinc-50, oklch(0.985 0 0));
+  --mdx-blockquote-border: var(--color-zinc-300, oklch(0.871 0.006 286.286));
+  --mdx-blockquote-text: var(--color-zinc-600, oklch(0.442 0.017 285.786));
+
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 2rem 1rem;
+  color: var(--mdx-body);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+}
+
+/* ── Headings ── */
+/* :where() zeroes specificity so Tailwind classes on elements always win */
+
+.mdx-content :where(h1) {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--mdx-heading);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mdx-border);
+}
+.mdx-content :where(h2) {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--mdx-heading);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.mdx-content :where(h3) {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: var(--mdx-heading);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.mdx-content :where(h4) {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: var(--mdx-heading);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.mdx-content :where(h5),
+.mdx-content :where(h6) {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--mdx-heading);
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Paragraphs ── */
+.mdx-content :where(p) {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.75rem;
+}
+.mdx-content :where(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* ── Links ── */
+.mdx-content :where(a) {
+  color: var(--mdx-link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--mdx-border);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+}
+.mdx-content :where(a:hover) {
+  text-decoration-color: var(--mdx-heading);
+}
+
+/* ── Inline code ── */
+.mdx-content :where(:not(pre) > code) {
+  position: relative;
+  border-radius: 0.375rem;
+  background: var(--mdx-inline-code-bg);
+  padding: 0.2rem 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  color: var(--mdx-inline-code-text);
+  font-weight: 500;
+}
+
+/* ── Code blocks ── */
+/* rehype-pretty-code wraps in figure[data-rehype-pretty-code-figure] */
+
+.mdx-content :where(figure[data-rehype-pretty-code-figure]) {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--mdx-border);
+  background: var(--mdx-code-bg);
+  overflow: hidden;
+}
+.mdx-content :where(figure[data-rehype-pretty-code-figure] figcaption) {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--mdx-muted);
+  background: var(--mdx-heading);
+  border-bottom: 1px solid var(--mdx-code-text);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+}
+.mdx-content :where(figure[data-rehype-pretty-code-figure] pre) {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  background: transparent;
+}
+.mdx-content :where(figure[data-rehype-pretty-code-figure] code) {
+  color: var(--mdx-code-text);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  display: grid;
+}
+.mdx-content :where(figure[data-rehype-pretty-code-figure] [data-line]) {
+  padding-inline: 1.25rem;
+  margin-inline: -1.25rem;
+  border-left: 2px solid transparent;
+}
+.mdx-content :where(figure[data-rehype-pretty-code-figure] [data-highlighted-line]) {
+  border-left-color: var(--color-blue-500, oklch(0.623 0.214 259.815));
+  background: rgb(59 130 246 / 0.08);
+}
+
+/* ── Plain pre/code fallback ── */
+.mdx-content :where(pre) {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  background: var(--mdx-code-bg);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.mdx-content :where(pre code) {
+  color: var(--mdx-code-text);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  background: transparent;
+  padding: 0;
+}
+
+/* ── Tables ── */
+.mdx-content :where(table) {
+  margin: 1.5rem 0;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+.mdx-content :where(thead) {
+  border-bottom: 1px solid var(--mdx-border);
+}
+.mdx-content :where(th) {
+  padding: 0.625rem 1rem;
+  text-align: left;
+  font-weight: 500;
+  color: var(--mdx-muted);
+  background: var(--mdx-table-header-bg);
+}
+.mdx-content :where(td) {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--mdx-border);
+}
+.mdx-content :where(tbody tr:last-child td) {
+  border-bottom: 0;
+}
+.mdx-content :where(tbody tr:hover) {
+  background: var(--mdx-table-hover);
+}
+
+/* ── Blockquotes ── */
+.mdx-content :where(blockquote) {
+  margin: 1.5rem 0;
+  border-left: 3px solid var(--mdx-blockquote-border);
+  padding: 0.75rem 1rem;
+  font-style: italic;
+  color: var(--mdx-blockquote-text);
+}
+.mdx-content :where(blockquote p) {
+  margin: 0;
+}
+
+/* ── Lists ── */
+.mdx-content :where(ul) {
+  margin: 1rem 0;
+  margin-left: 1.5rem;
+  list-style-type: disc;
+}
+.mdx-content :where(ol) {
+  margin: 1rem 0;
+  margin-left: 1.5rem;
+  list-style-type: decimal;
+}
+.mdx-content :where(li) {
+  margin-top: 0.25rem;
+  line-height: 1.75rem;
+}
+.mdx-content :where(li > ul),
+.mdx-content :where(li > ol) {
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+/* ── Horizontal rule ── */
+.mdx-content :where(hr) {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--mdx-border);
+}
+
+/* ── Images ── */
+.mdx-content :where(img) {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  max-width: 100%;
+}
+
+/* ── Semantic emphasis ── */
+.mdx-content :where(strong) {
+  font-weight: 600;
+  color: var(--mdx-heading);
+}
+
+/* ── Heading anchor links (rehype-autolink-headings) ── */
+.mdx-content :where(h1, h2, h3) {
+  position: relative;
+  scroll-margin-top: 2rem;
+}
+.mdx-content :where(h1 .icon-link),
+.mdx-content :where(h2 .icon-link),
+.mdx-content :where(h3 .icon-link) {
+  position: absolute;
+  left: -1.25rem;
+  top: 50%;
+  translate: 0 -50%;
+  opacity: 0;
+  color: var(--mdx-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: opacity 0.15s;
+}
+.mdx-content :where(h1:hover .icon-link),
+.mdx-content :where(h2:hover .icon-link),
+.mdx-content :where(h3:hover .icon-link) {
+  opacity: 1;
+}
+.mdx-content :where(h1 .icon-link:hover),
+.mdx-content :where(h2 .icon-link:hover),
+.mdx-content :where(h3 .icon-link:hover) {
+  color: var(--mdx-heading);
+}
