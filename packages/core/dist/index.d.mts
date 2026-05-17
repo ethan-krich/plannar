@@ -1,7 +1,10 @@
 import { CompileOptions } from "@mdx-js/mdx";
 
 //#region src/generate-mdx.d.ts
-declare function generateMdx(filepath: string, options?: CompileOptions): Promise<string>;
+declare function generateMdx(
+  filepath: string,
+  options?: CompileOptions & { content?: string },
+): Promise<string>;
 //#endregion
 //#region src/plugins/remark-state-bind.d.ts
 interface AstNode {

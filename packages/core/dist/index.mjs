@@ -48,14 +48,13 @@ function parseEsm(code) {
     locations: true,
   });
 }
-let playgroundCounter = 0;
-let useStateImportAdded = false;
 const remarkStateBind = () => {
+  const state = { counter: 0, importAdded: false };
   return (tree) => {
-    playgroundCounter = 0;
-    useStateImportAdded = false;
-    visitAndTransform(tree, tree);
-    if (useStateImportAdded)
+    state.counter = 0;
+    state.importAdded = false;
+    visitAndTransform(tree, tree, state);
+    if (state.importAdded)
       tree.children.unshift({
         type: "mdxjsEsm",
         value: `import { useState } from "react"`,
@@ -63,34 +62,34 @@ const remarkStateBind = () => {
       });
   };
 };
-function visitAndTransform(node, root) {
+function visitAndTransform(node, root, state) {
   if (!node.children) return;
   for (let i = node.children.length - 1; i >= 0; i--) {
     const child = node.children[i];
-    if (child.children) visitAndTransform(child, root);
+    if (child.children) visitAndTransform(child, root, state);
   }
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
     if (child.type === "mdxJsxFlowElement" && child.name === "Playground") {
-      const transformed = transformPlayground(child, node.children, i, root);
+      const transformed = transformPlayground(child, node.children, i, root, state);
       i += transformed.indexOffset;
     }
   }
 }
-function transformPlayground(playground, siblings, index, root) {
+function transformPlayground(playground, siblings, index, root, state) {
   const binds = collectBinds(playground, playground);
   const names = binds.map((b) => b.name);
   const dupes = names.filter((n, i) => names.indexOf(n) !== i);
   if (dupes.length > 0)
     throw new Error(`Duplicate bind names in <Playground>: ${[...new Set(dupes)].join(", ")}`);
   applyBindings(playground, binds);
-  const componentName = `_PlannarPlayground_${playgroundCounter++}`;
+  const componentName = `_PlannarPlayground_${state.counter++}`;
   const childrenJsx = (playground.children || []).map(serializeNode).join("\n");
   const stateDecls = binds
     .map((b) => `const [${b.name}, set${capitalize(b.name)}] = useState(${b.initialValue})`)
     .join("\n  ");
   const esmCode = `function ${componentName}() {\n  ${stateDecls ? stateDecls + "\n  " : ""}return (<>\n${indent(childrenJsx)}\n</>)\n}`;
-  if (stateDecls && !useStateImportAdded) useStateImportAdded = true;
+  if (stateDecls && !state.importAdded) state.importAdded = true;
   const esmNode = {
     type: "mdxjsEsm",
     value: esmCode,
@@ -314,17 +313,23 @@ function indent(text) {
 //#endregion
 //#region src/generate-mdx.ts
 async function generateMdx(filepath, options = {}) {
+  const { content, ...mdxOptions } = options;
   const absolutePath = resolve(filepath);
+  const value = content ?? (await readFile(absolutePath, "utf-8"));
   const result = await compile(
     {
-      value: await readFile(absolutePath, "utf-8"),
+      value,
       path: absolutePath,
     },
     {
       development: false,
-      ...options,
-      remarkPlugins: [remarkStateBind, remarkGfm, ...(options.remarkPlugins ?? [])],
-      rehypePlugins: [rehypePrettyCode, rehypeAutolinkHeadings, ...(options.rehypePlugins ?? [])],
+      ...mdxOptions,
+      remarkPlugins: [remarkStateBind, remarkGfm, ...(mdxOptions.remarkPlugins ?? [])],
+      rehypePlugins: [
+        rehypePrettyCode,
+        rehypeAutolinkHeadings,
+        ...(mdxOptions.rehypePlugins ?? []),
+      ],
     },
   );
   return String(result.value);

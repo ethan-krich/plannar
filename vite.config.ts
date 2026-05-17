@@ -5,9 +5,9 @@ import { generateMdx } from "@plannar/core";
 
 const mdxPlugin = {
   name: "mdx",
-  async transform(_code: string, id: string) {
+  async transform(code: string, id: string) {
     if (id.endsWith(".mdx")) {
-      const compiled = await generateMdx(id);
+      const compiled = await generateMdx(id, { content: code });
       return {
         code: compiled,
         map: null,
