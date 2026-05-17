@@ -1,15 +1,57 @@
-<!--VITE PLUS START-->
+# Plannar
 
-# Using Vite+, the Unified Toolchain for the Web
+Plannar helps agents write plans users want to read while being token-efficient. The `core` package renders these plans as MDX; the `editor` app is the preview environment.
 
-This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+> **Note for agents:** if anything in this file is wrong or out of date as you work, fix it and flag the change to the user for approval.
 
-Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+## Project structure
 
-## Review Checklist
+Monorepo with packages and apps.
 
-- [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
-- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+**packages/**
 
-<!--VITE PLUS END-->
+- `core` — Renders MDX plans. Owns the custom `remarkStateBind` plugin which provides automatic state binding via a `bind` prop. Ships document styles so consumers don't restyle.
+
+**apps/**
+
+- `editor` — Live preview for `core`. Compiles MDX to a JS string and renders it.
+
+### Common entry points
+
+- Adding or modifying remark plugins → `packages/core/src/plugins/`
+- Document styling → `packages/core/src/styles/`
+- How MDX is compiled in preview → `apps/editor/src/`
+
+## Tooling
+
+This project uses **Vite+** (`vp` CLI) — a toolchain wrapping Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Run `vp help` for commands and `vp <cmd> --help` for specifics. Docs: `node_modules/vite-plus/docs` or https://viteplus.dev/guide/. Vite+ ≠ Vite — invoke Vite via `vp dev` / `vp build`.
+
+## Conventions
+
+- `function` keyword for React components; arrow functions for everything else
+- Prefer `type` over `interface`
+- **Tailwind v4** for all styling — config lives in `@theme` inside the global CSS file. There is no `tailwind.config.js`; do not create one.
+- Tests live **per package**, colocated as `*.test.ts(x)` next to the source they cover
+- Always add tests for new package functionality
+
+## Don't
+
+- Add dependencies without asking
+- Disable lint or type rules to make `vp check` pass — fix the underlying issue
+- Hand-edit anything under `node_modules/`
+- Restyle documents at the app layer; styling belongs in `core`
+
+## Version control
+
+- Conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`)
+- Commit each logical change locally
+- **Push only when the user asks**, or batch pushes at end of session. Never push directly to `main`.
+
+## Review checklist (before declaring a task done)
+
+- [ ] `vp install` after pulling
+- [ ] `vp check` — format, lint, type check
+- [ ] `vp test` — all packages pass
+- [ ] Look for `vite.config.ts` tasks or `package.json` scripts that should also run via `vp run <script>`
+- [ ] UI changes verified with the Playwright MCP
+- [ ] If you learned something an agent should know, update this file and tell the user
