@@ -3,6 +3,7 @@ import { generateMdx } from "./generate-mdx.js";
 import { writeFile, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import type { BindingMeta } from "./plugins/meta.js";
 
 async function withTempFile(
   content: string,
@@ -89,5 +90,64 @@ describe("generateMdx", () => {
       });
       expect(result).toBeDefined();
     });
+  });
+
+  it("uses custom bindings for component-specific change props", async () => {
+    const customBindings: Record<string, BindingMeta> = {
+      checkbox: {
+        valueProp: "checked",
+        changeProp: "onCheckedChange",
+        extract: "e",
+      },
+    };
+
+    await withTempFile(
+      `<Playground>\n  <Checkbox bind="on:true" />\n</Playground>`,
+      async (filepath) => {
+        const result = await generateMdx(filepath, { bindings: customBindings });
+        expect(result).toContain("onCheckedChange");
+        expect(result).toContain("checked:");
+        expect(result).toContain("on");
+        expect(result).toContain("setOn");
+      },
+    );
+  });
+
+  it("custom bindings override html bindings", async () => {
+    const customBindings: Record<string, BindingMeta> = {
+      input: {
+        valueProp: "customValue",
+        changeProp: "onCustomChange",
+        extract: "e.detail",
+      },
+    };
+
+    await withTempFile(`<Playground>\n  <input bind="x:1" />\n</Playground>`, async (filepath) => {
+      const result = await generateMdx(filepath, { bindings: customBindings });
+      expect(result).toContain("customValue");
+      expect(result).toContain("onCustomChange");
+      expect(result).toContain("setX(e.detail)");
+    });
+  });
+
+  it("custom bindings support inject transform", async () => {
+    const customBindings: Record<string, BindingMeta> = {
+      slider: {
+        valueProp: "value",
+        changeProp: "onValueChange",
+        extract: "e",
+        inject: "[v]",
+      },
+    };
+
+    await withTempFile(
+      `<Playground>\n  <Slider bind="val:50" />\n</Playground>`,
+      async (filepath) => {
+        const result = await generateMdx(filepath, { bindings: customBindings });
+        expect(result).toContain("onValueChange");
+        expect(result).toContain("setVal(e)");
+        expect(result).toContain("[val]");
+      },
+    );
   });
 });

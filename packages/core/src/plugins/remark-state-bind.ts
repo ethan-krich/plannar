@@ -1,6 +1,6 @@
 import { Parser } from "acorn";
 import acornJsx from "acorn-jsx";
-import { htmlBindings } from "./meta.js";
+import { htmlBindings, type BindingMeta } from "./meta.js";
 
 interface AstNode {
   type: string;
@@ -29,13 +29,14 @@ function parseEsm(code: string): any {
   });
 }
 
-export const remarkStateBind = () => {
+export const remarkStateBind = (options?: { bindings?: Record<string, BindingMeta> }) => {
+  const bindings = { ...htmlBindings, ...options?.bindings };
   const state: TransformState = { counter: 0, importAdded: false };
 
   return (tree: AstNode) => {
     state.counter = 0;
     state.importAdded = false;
-    visitAndTransform(tree, tree, state);
+    visitAndTransform(tree, tree, state, bindings);
 
     if (state.importAdded) {
       tree.children!.unshift({
@@ -47,20 +48,32 @@ export const remarkStateBind = () => {
   };
 };
 
-function visitAndTransform(node: AstNode, root: AstNode, state: TransformState): void {
+function visitAndTransform(
+  node: AstNode,
+  root: AstNode,
+  state: TransformState,
+  bindings: Record<string, BindingMeta>,
+): void {
   if (!node.children) return;
 
   for (let i = node.children.length - 1; i >= 0; i--) {
     const child = node.children[i];
     if (child.children) {
-      visitAndTransform(child, root, state);
+      visitAndTransform(child, root, state, bindings);
     }
   }
 
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
     if (child.type === "mdxJsxFlowElement" && child.name === "Playground") {
-      const transformed = transformPlayground(child as AstNode, node.children, i, root, state);
+      const transformed = transformPlayground(
+        child as AstNode,
+        node.children,
+        i,
+        root,
+        state,
+        bindings,
+      );
       i += transformed.indexOffset;
     }
   }
@@ -72,6 +85,7 @@ function transformPlayground(
   index: number,
   root: AstNode,
   state: TransformState,
+  bindings: Record<string, BindingMeta>,
 ): { indexOffset: number } {
   const binds = collectBinds(playground, playground);
 
@@ -81,7 +95,7 @@ function transformPlayground(
     throw new Error(`Duplicate bind names in <Playground>: ${[...new Set(dupes)].join(", ")}`);
   }
 
-  applyBindings(playground, binds);
+  applyBindings(playground, binds, bindings);
 
   const counter = state.counter++;
   const componentName = `_PlannarPlayground_${counter}`;
@@ -173,7 +187,11 @@ function collectBinds(node: AstNode, owningPlayground: AstNode): BindEntry[] {
   return binds;
 }
 
-function applyBindings(node: AstNode, binds: BindEntry[]): void {
+function applyBindings(
+  node: AstNode,
+  binds: BindEntry[],
+  bindings: Record<string, BindingMeta>,
+): void {
   const bindNameSet = new Set(binds.map((b) => b.name));
 
   if (Array.isArray(node.attributes)) {
@@ -188,7 +206,7 @@ function applyBindings(node: AstNode, binds: BindEntry[]): void {
             (a: AstNode) => a.type === "mdxJsxAttribute" && a.name === "type",
           );
           const inputType = typeAttr ? String(typeAttr.value ?? "text") : "";
-          const replacement = bindingAttrs(elName, inputType, parsed.name);
+          const replacement = bindingAttrs(elName, inputType, parsed.name, bindings);
           attrs.splice(i, 1, ...replacement);
         } else {
           attrs.splice(i, 1);
@@ -199,7 +217,7 @@ function applyBindings(node: AstNode, binds: BindEntry[]): void {
 
   if (Array.isArray(node.children)) {
     for (const child of node.children) {
-      applyBindings(child, binds);
+      applyBindings(child, binds, bindings);
     }
   }
 }
@@ -231,9 +249,14 @@ function parseAttrValue(attr: AstNode): string | null {
   return null;
 }
 
-function bindingAttrs(elName: string, inputType: string, name: string): AstNode[] {
+function bindingAttrs(
+  elName: string,
+  inputType: string,
+  name: string,
+  bindings: Record<string, BindingMeta>,
+): AstNode[] {
   const key = inputType ? `${elName}:${inputType}` : elName;
-  const meta = htmlBindings[key] ?? htmlBindings[elName];
+  const meta = bindings[key] ?? bindings[elName];
   if (!meta) return [];
 
   const setter = `set${capitalize(name)}`;
