@@ -41,16 +41,7 @@ declare const remarkStateBind: (options?: {
 //#region src/plugin.d.ts
 declare function mdxPlugin(options?: { bindings?: Record<string, BindingMeta> }): {
   name: string;
-  transform(
-    code: string,
-    id: string,
-  ): Promise<
-    | {
-        code: string;
-        map: null;
-      }
-    | undefined
-  >;
+  load(id: string): Promise<string | undefined>;
 };
 //#endregion
 export { type BindingMeta, type GenerateMdxOptions, generateMdx, mdxPlugin, remarkStateBind };

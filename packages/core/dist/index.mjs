@@ -6,6 +6,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { Parser } from "acorn";
 import acornJsx from "acorn-jsx";
+import { readFileSync } from "node:fs";
 //#region src/plugins/meta.ts
 /**
  * Built-in HTML element bindings.
@@ -348,18 +349,25 @@ async function generateMdx(filepath, options = {}) {
 }
 //#endregion
 //#region src/plugin.ts
+function hoistImports(code) {
+  const imports = [];
+  const rest = [];
+  for (const line of code.split("\n"))
+    if (line.startsWith("import ")) imports.push(line);
+    else rest.push(line);
+  return [...imports, ...rest].join("\n");
+}
 function mdxPlugin(options) {
   return {
     name: "mdx",
-    async transform(code, id) {
+    async load(id) {
       if (id.endsWith(".mdx"))
-        return {
-          code: await generateMdx(id, {
-            content: code,
+        return hoistImports(
+          await generateMdx(id, {
+            content: readFileSync(id, "utf-8"),
             ...options,
           }),
-          map: null,
-        };
+        );
     },
   };
 }

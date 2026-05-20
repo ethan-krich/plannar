@@ -19,6 +19,10 @@
       "import": "./src/styles/mdx.css",
       "default": "./src/styles/mdx.css"
     },
+    "./styles/theme.css": {
+      "import": "./src/styles/theme.css",
+      "default": "./src/styles/theme.css"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
