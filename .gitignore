@@ -27,3 +27,4 @@ dist-ssr
 # AI agents
 .claude/worktrees/
 .playwright-mcp
+.context/
