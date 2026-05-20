@@ -1,0 +1,47 @@
+{
+  "name": "plannar",
+  "version": "0.0.0",
+  "description": "MDX plan editor CLI",
+  "license": "MIT",
+  "bin": {
+    "plannar": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "@base-ui/react": "catalog:",
+    "@tailwindcss/vite": "^4.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "citty": "^0.2.2",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@plannar/core": "workspace:*",
+    "@plannar/export": "workspace:*",
+    "@plannar/registry-metadata": "workspace:*",
+    "@types/node": "^25.6.2",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@typescript/native-preview": "7.0.0-dev.20260509.2",
+    "typescript": "^6.0.3",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  }
+}
