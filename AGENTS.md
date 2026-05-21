@@ -12,6 +12,9 @@ Monorepo with packages and apps.
 
 - `core` — Renders MDX plans. Owns the custom `remarkStateBind` plugin which provides automatic state binding via a `bind` prop. Ships document styles so consumers don't restyle.
 
+- `export` — Generates self-contained HTML from plans. Exports `exportPlan()` with `ExportOptions`.
+- `plannar` — CLI package. Handles config loading, `init`/`editor`/`export` commands.
+
 **apps/**
 
 - `editor` — Live preview for `core`. Compiles MDX to a JS string and renders it.
@@ -21,6 +24,7 @@ Monorepo with packages and apps.
 - Adding or modifying remark plugins → `packages/core/src/plugins/`
 - Document styling → `packages/core/src/styles/`
 - How MDX is compiled in preview → `apps/editor/src/`
+- Config schema and resolution → `packages/plannar/src/config.ts`
 
 ## Tooling
 
@@ -40,6 +44,33 @@ This project uses **Vite+** (`vp` CLI) — a toolchain wrapping Vite, Rolldown, 
 - Disable lint or type rules to make `vp check` pass — fix the underlying issue
 - Hand-edit anything under `node_modules/`
 - Restyle documents at the app layer; styling belongs in `core`
+
+## Config system
+
+Plannar resolves configuration from two sources (merged with local > global > defaults):
+
+| Source | Path                                            |
+| ------ | ----------------------------------------------- |
+| Global | `~/.config/plannar/plannar.config.{js,ts,json}` |
+| Local  | `./plannar.config.{js,ts,json}` (CWD)           |
+
+Config fields (`PlannarConfig` type in `packages/plannar/src/config.ts`):
+
+- `plannarFolder` — default `".plannar"`
+- `exportsFolder` — default `".plannar/exports"` (resolved from `plannarFolder`)
+- `globalCss` — path to CSS file overriding builtin styles, default `".plannar/globals.css"`
+- `cssFilePath` — additional CSS file to load alongside
+- `viteConfig` — `{ editor?, exports? }` overrides deep-merged into Vite configs (JS/TS configs only)
+
+JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
+
+### How config flows
+
+1. CLI commands (`editor`, `export`) call `resolveConfig(cwd)` from `packages/plannar/src/config.ts`
+2. Editor: config values are set as env vars (`PLANNAR_FOLDER`, `PLANNAR_GLOBAL_CSS`, etc.) consumed by Vite configs
+3. Export: config is passed as `ExportOptions` to `exportPlan()`
+4. `viteConfig.editor` / `viteConfig.exports` are deep-merged into the respective Vite configurations
+5. CSS overrides: a `virtual:plannar-global-css` Vite plugin resolves to the user's CSS file, loading it after builtin styles so it takes priority
 
 ## Version control
 

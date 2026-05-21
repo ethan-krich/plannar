@@ -17,9 +17,9 @@ function hoistImports(code: string): string {
   return [...imports, ...rest].join("\n");
 }
 
-export function plannarPlansPlugin(cwd: string): Plugin {
-  const plansDir = join(cwd, ".plannar", "plans");
-  const plannarRoot = join(cwd, ".plannar");
+export function plannarPlansPlugin(cwd: string, plannarFolder = ".plannar"): Plugin {
+  const plansDir = join(cwd, plannarFolder, "plans");
+  const plannarRoot = join(cwd, plannarFolder);
 
   return {
     name: "plannar-plans",

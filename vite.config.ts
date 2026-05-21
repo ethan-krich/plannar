@@ -22,7 +22,9 @@ const shadcnBindings: Record<string, BindingMeta> = {
   },
 };
 
-const plansDir = join(process.env.PLANNAR_CWD ?? process.cwd(), ".plannar", "plans");
+const plannarFolder = process.env.PLANNAR_FOLDER || ".plannar";
+const plansDir = join(process.env.PLANNAR_CWD ?? process.cwd(), plannarFolder, "plans");
+const plannarRoot = join(process.env.PLANNAR_CWD ?? process.cwd(), plannarFolder);
 
 function hoistImports(code: string): string {
   const imports: string[] = [];
@@ -72,8 +74,6 @@ const plannarPlansPlugin = {
           bindings: shadcnBindings,
         }),
       );
-      // Rewrite @/ imports to absolute paths so Vite resolves them directly
-      const plannarRoot = join(process.env.PLANNAR_CWD ?? process.cwd(), ".plannar");
       return compiled.replace(
         /from\s+"@\/(.+?)"/g,
         (_: string, path: string) => `from "${resolve(plannarRoot, path)}.tsx"`,
@@ -88,9 +88,36 @@ const plannarPlansPlugin = {
   },
 };
 
+const globalCssPlugin = {
+  name: "plannar-global-css",
+  resolveId(id: string) {
+    if (id === "virtual:plannar-global-css") return "\0plannar-global-css";
+  },
+  load(id: string) {
+    if (id === "\0plannar-global-css") {
+      const globalCss = process.env.PLANNAR_GLOBAL_CSS;
+      const cssFilePath = process.env.PLANNAR_CSS_FILE_PATH;
+      const imports: string[] = [];
+      if (globalCss && existsSync(globalCss)) {
+        imports.push(globalCss);
+      }
+      if (cssFilePath && existsSync(cssFilePath)) {
+        imports.push(cssFilePath);
+      }
+      return imports.map((p) => `import '${p}';`).join("\n") || "";
+    }
+  },
+};
+
 export default defineConfig({
   root: "apps/editor",
-  plugins: [tailwindcss(), react(), mdxPlugin({ bindings: shadcnBindings }), plannarPlansPlugin],
+  plugins: [
+    tailwindcss(),
+    react(),
+    mdxPlugin({ bindings: shadcnBindings }),
+    plannarPlansPlugin,
+    globalCssPlugin,
+  ],
   server: {
     fs: {
       allow: [resolve(__dirname, "apps/editor"), process.cwd()],
@@ -98,7 +125,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": join(process.env.PLANNAR_CWD ?? process.cwd(), ".plannar"),
+      "@": join(process.env.PLANNAR_CWD ?? process.cwd(), plannarFolder),
     },
   },
   staged: {

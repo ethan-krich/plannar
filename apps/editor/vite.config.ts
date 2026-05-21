@@ -10,7 +10,8 @@ import type { Plugin } from "vite";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const workspaceRoot = process.env.PLANNAR_CWD ?? resolve(__dirname, "../..");
-const plannarRoot = join(workspaceRoot, ".plannar");
+const plannarFolder = process.env.PLANNAR_FOLDER || ".plannar";
+const plannarRoot = join(workspaceRoot, plannarFolder);
 
 const shadcnBindings: Record<string, BindingMeta> = {
   input: {
@@ -86,8 +87,35 @@ const plannarPlansPlugin: Plugin = {
   },
 };
 
+const globalCssPlugin: Plugin = {
+  name: "plannar-global-css",
+  resolveId(id: string) {
+    if (id === "virtual:plannar-global-css") return "\0plannar-global-css";
+  },
+  load(id: string) {
+    if (id === "\0plannar-global-css") {
+      const globalCss = process.env.PLANNAR_GLOBAL_CSS;
+      const cssFilePath = process.env.PLANNAR_CSS_FILE_PATH;
+      const imports: string[] = [];
+      if (globalCss && existsSync(globalCss)) {
+        imports.push(globalCss);
+      }
+      if (cssFilePath && existsSync(cssFilePath)) {
+        imports.push(cssFilePath);
+      }
+      return imports.map((p) => `import '${p}';`).join("\n") || "";
+    }
+  },
+};
+
 export default defineConfig({
-  plugins: [tailwindcss(), react(), mdxPlugin({ bindings: shadcnBindings }), plannarPlansPlugin],
+  plugins: [
+    tailwindcss(),
+    react(),
+    mdxPlugin({ bindings: shadcnBindings }),
+    plannarPlansPlugin,
+    globalCssPlugin,
+  ],
   server: {
     fs: {
       allow: [__dirname, workspaceRoot],

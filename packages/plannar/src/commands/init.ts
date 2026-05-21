@@ -28,6 +28,12 @@ const componentsJson = {
   registries: {},
 };
 
+const defaultConfig = {
+  plannarFolder: ".plannar",
+  exportsFolder: ".plannar/exports",
+  globalCss: ".plannar/globals.css",
+};
+
 const samplePlan = `import { Button } from "@/components/ui/button";
 
 # Hello, Plannar!
@@ -79,13 +85,24 @@ export default defineCommand({
       "utf-8",
     );
 
-    writeFileSync(join(plannarDir, "config.json"), "{}\n", "utf-8");
+    writeFileSync(
+      join(plannarDir, "config.json"),
+      JSON.stringify(defaultConfig, null, 2) + "\n",
+      "utf-8",
+    );
+
+    writeFileSync(
+      join(plannarDir, "globals.css"),
+      "/* Override built-in plannar styles here */\n",
+      "utf-8",
+    );
 
     writeFileSync(join(plansDir, "hello-world.mdx"), samplePlan, "utf-8");
 
     console.log("✓ Initialized .plannar/");
     console.log("  └── components.json   (shadcn/ui registry)");
     console.log("  └── config.json        (project config)");
+    console.log("  └── globals.css         (style overrides)");
     console.log("  └── plans/");
     console.log("       └── hello-world.mdx");
     console.log("\nRun 'plannar editor' to preview your plans.");

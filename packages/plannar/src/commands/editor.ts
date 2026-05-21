@@ -3,6 +3,7 @@ import { createServer } from "vite";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
+import { resolveConfig, merge } from "../config.js";
 
 function findEditorRoot(startDir: string): string {
   let dir = startDir;
@@ -33,12 +34,24 @@ export default defineCommand({
   },
   async run({ args }) {
     const cwd = process.cwd();
+    const config = await resolveConfig(cwd);
+
     process.env.PLANNAR_CWD = cwd;
+    process.env.PLANNAR_FOLDER = config.plannarFolder;
+    process.env.PLANNAR_EXPORTS_FOLDER = config.exportsFolder;
+
+    if (config.globalCss) {
+      process.env.PLANNAR_GLOBAL_CSS = resolve(cwd, config.globalCss);
+    }
+    if (config.cssFilePath) {
+      process.env.PLANNAR_CSS_FILE_PATH = resolve(cwd, config.cssFilePath);
+    }
+
     const pkgDir = fileURLToPath(new URL("..", import.meta.url));
     const editorRoot = findEditorRoot(pkgDir);
     const configFile = resolve(editorRoot, "vite.config.ts");
 
-    const server = await createServer({
+    const baseServerConfig: Record<string, unknown> = {
       configFile,
       root: editorRoot,
       server: {
@@ -48,7 +61,13 @@ export default defineCommand({
         port: Number(args.port),
         host: args.host,
       },
-    });
+    };
+
+    const serverConfig = config.viteConfig?.editor
+      ? merge(baseServerConfig, config.viteConfig.editor as Record<string, unknown>)
+      : baseServerConfig;
+
+    const server = await createServer(serverConfig as Parameters<typeof createServer>[0]);
 
     await server.listen();
     server.printUrls();

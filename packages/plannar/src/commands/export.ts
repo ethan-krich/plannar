@@ -1,5 +1,6 @@
 import { defineCommand } from "citty";
 import { exportPlan } from "@plannar/export";
+import { resolveConfig } from "../config.js";
 
 export default defineCommand({
   meta: {
@@ -14,7 +15,18 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const outPath = await exportPlan(args.plan, process.cwd());
+    const cwd = process.cwd();
+    const config = await resolveConfig(cwd);
+
+    const outPath = await exportPlan(args.plan, {
+      cwd,
+      plannarFolder: config.plannarFolder,
+      exportsFolder: config.exportsFolder,
+      globalCss: config.globalCss,
+      cssFilePath: config.cssFilePath,
+      viteConfig: config.viteConfig?.exports,
+    });
+
     console.log(`✓ Exported to ${outPath}`);
   },
 });

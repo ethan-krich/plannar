@@ -28,3 +28,6 @@ dist-ssr
 .claude/worktrees/
 .playwright-mcp
 .context/
+
+# Plannar exports (build artifacts)
+.plannar/exports/

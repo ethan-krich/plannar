@@ -46,7 +46,7 @@ describe("exportPlan", () => {
   it("exports a basic plan to a self-contained HTML file", async () => {
     const cwd = setupCwd("hello", "# Hello\n\nThis is a test plan.\n");
 
-    const outPath = await exportPlan("hello", cwd);
+    const outPath = await exportPlan("hello", { cwd });
 
     const html = readFileSync(outPath, "utf-8");
     expect(html).toContain("<!DOCTYPE html>");
@@ -73,7 +73,7 @@ describe("exportPlan", () => {
       ].join("\n"),
     );
 
-    const outPath = await exportPlan("button", cwd);
+    const outPath = await exportPlan("button", { cwd });
     const html = readFileSync(outPath, "utf-8");
 
     expect(html).toContain("Export me");
@@ -98,7 +98,7 @@ describe("exportPlan", () => {
     mkdirSync(plansDir, { recursive: true });
     writeFileSync(join(plansDir, "foo.mdx"), "# Foo\n", "utf-8");
 
-    const outPath = await exportPlan("foo", cwd);
+    const outPath = await exportPlan("foo", { cwd });
     expect(outPath).toContain(".plannar/exports/foo.html");
   });
 });

@@ -24,6 +24,7 @@
     "citty": "^0.2.2",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "jiti": "^2.4.2",
     "lucide-react": "catalog:",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

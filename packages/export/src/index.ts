@@ -1,5 +1,5 @@
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -9,8 +9,21 @@ import { shadcnBindings } from "@plannar/registry-metadata";
 
 const pkgDir = dirname(fileURLToPath(import.meta.url));
 
-export async function exportPlan(planName: string, cwd: string = process.cwd()): Promise<string> {
-  const planPath = join(cwd, ".plannar", "plans", `${planName}.mdx`);
+export type ExportOptions = {
+  cwd?: string;
+  plannarFolder?: string;
+  exportsFolder?: string;
+  globalCss?: string;
+  cssFilePath?: string;
+  viteConfig?: Record<string, unknown>;
+};
+
+export async function exportPlan(planName: string, options: ExportOptions = {}): Promise<string> {
+  const cwd = options.cwd ?? process.cwd();
+  const plannarFolder = options.plannarFolder ?? ".plannar";
+  const exportsFolder = options.exportsFolder ?? `${plannarFolder}/exports`;
+
+  const planPath = join(cwd, plannarFolder, "plans", `${planName}.mdx`);
 
   const compiled = await generateMdx(planPath, {
     bindings: shadcnBindings,
@@ -18,9 +31,9 @@ export async function exportPlan(planName: string, cwd: string = process.cwd()):
 
   const tmpDir = mkdtempSync(join(pkgDir, "..", ".tmp-"));
   try {
-    const html = await buildExportHtml(compiled, tmpDir, cwd);
+    const html = await buildExportHtml(compiled, tmpDir, cwd, plannarFolder, options);
 
-    const outDir = join(cwd, ".plannar", "exports");
+    const outDir = resolve(cwd, exportsFolder);
     mkdirSync(outDir, { recursive: true });
     const outPath = join(outDir, `${planName}.html`);
     writeFileSync(outPath, html, "utf-8");
@@ -31,8 +44,41 @@ export async function exportPlan(planName: string, cwd: string = process.cwd()):
   }
 }
 
-async function buildExportHtml(compiled: string, tmpDir: string, cwd: string): Promise<string> {
-  const plannarDir = join(cwd, ".plannar");
+function deepMerge<T extends Record<string, unknown>>(
+  target: T,
+  source: Record<string, unknown>,
+): T {
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    const sv = source[key];
+    const tv = (result as Record<string, unknown>)[key];
+    if (
+      sv &&
+      typeof sv === "object" &&
+      !Array.isArray(sv) &&
+      tv &&
+      typeof tv === "object" &&
+      !Array.isArray(tv)
+    ) {
+      (result as Record<string, unknown>)[key] = deepMerge(
+        tv as Record<string, unknown>,
+        sv as Record<string, unknown>,
+      );
+    } else {
+      (result as Record<string, unknown>)[key] = sv;
+    }
+  }
+  return result;
+}
+
+async function buildExportHtml(
+  compiled: string,
+  tmpDir: string,
+  cwd: string,
+  plannarFolder: string,
+  options: ExportOptions,
+): Promise<string> {
+  const plannarDir = join(cwd, plannarFolder);
   const sourcePath = relative(tmpDir, plannarDir).replaceAll("\\", "/");
 
   const planModule = compiled
@@ -58,13 +104,25 @@ if (root) {
     "utf-8",
   );
 
+  let cssImports = "";
+  if (options.globalCss) {
+    const globalCssAbs = resolve(cwd, options.globalCss);
+    const globalCssRel = relative(tmpDir, globalCssAbs).replaceAll("\\", "/");
+    cssImports += `@import "${globalCssRel}";\n`;
+  }
+  if (options.cssFilePath) {
+    const cssFilePathAbs = resolve(cwd, options.cssFilePath);
+    const cssFilePathRel = relative(tmpDir, cssFilePathAbs).replaceAll("\\", "/");
+    cssImports += `@import "${cssFilePathRel}";\n`;
+  }
+
   writeFileSync(
     join(tmpDir, "index.css"),
     `@import "tailwindcss";
 @import "tw-animate-css";
 @import "@plannar/core/styles/mdx.css";
 @import "@plannar/core/styles/theme.css";
-@source "${sourcePath}";
+${cssImports}@source "${sourcePath}";
 
 @theme inline {
   --color-background: var(--background);
@@ -111,13 +169,19 @@ if (root) {
 
   const outDir = join(tmpDir, "dist");
 
-  await build({
+  const baseBuildConfig = {
     root: tmpDir,
     build: { outDir, minify: false },
     plugins: [tailwindcss(), react(), inlineAssetsPlugin(outDir)],
     resolve: { alias: { "@": plannarDir } },
-    logLevel: "warn",
-  });
+    logLevel: "warn" as const,
+  };
+
+  const buildConfig = options.viteConfig
+    ? deepMerge(baseBuildConfig as unknown as Record<string, unknown>, options.viteConfig)
+    : baseBuildConfig;
+
+  await build(buildConfig as Parameters<typeof build>[0]);
 
   return readFileSync(join(outDir, "index.html"), "utf-8");
 }
@@ -166,7 +230,6 @@ ${safeJs}
 </html>`;
         writeFileSync(join(outDir, "index.html"), html, "utf-8");
 
-        // Remove stale assets
         const entries = readdirSync(outDir);
         for (const entry of entries) {
           if (entry !== "index.html") {
