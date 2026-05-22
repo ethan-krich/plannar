@@ -1,5 +1,16 @@
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname } from "node:path";
+import { tmpdir } from "node:os";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -29,7 +40,7 @@ export async function exportPlan(planName: string, options: ExportOptions = {}):
     bindings: shadcnBindings,
   });
 
-  const tmpDir = mkdtempSync(join(pkgDir, "..", ".tmp-"));
+  const tmpDir = mkdtempSync(join(tmpdir(), "plannar-export-"));
   try {
     const html = await buildExportHtml(compiled, tmpDir, cwd, plannarFolder, options);
 
@@ -71,6 +82,29 @@ function deepMerge<T extends Record<string, unknown>>(
   return result;
 }
 
+function resolveExistingCssImport(cwd: string, tmpDir: string, cssPath?: string): string | null {
+  if (!cssPath) {
+    return null;
+  }
+
+  const cssAbs = resolve(cwd, cssPath);
+  if (!existsSync(cssAbs)) {
+    return null;
+  }
+
+  return relative(tmpDir, cssAbs).replaceAll("\\", "/");
+}
+
+function injectBrowserProcessShim(html: string): string {
+  const bareProcessEnv = /(?<!window\.)process\.env\b/;
+  if (!bareProcessEnv.test(html)) {
+    return html;
+  }
+
+  const shim = `<script>window.process ??= {}; window.process.env ??= {}; window.process.env.NODE_ENV ??= "production";</script>`;
+  return html.includes("</head>") ? html.replace("</head>", `${shim}</head>`) : `${shim}${html}`;
+}
+
 async function buildExportHtml(
   compiled: string,
   tmpDir: string,
@@ -80,6 +114,16 @@ async function buildExportHtml(
 ): Promise<string> {
   const plannarDir = join(cwd, plannarFolder);
   const sourcePath = relative(tmpDir, plannarDir).replaceAll("\\", "/");
+
+  const nodeModulesSource =
+    findNearestNodeModules(pkgDir) ??
+    findNearestNodeModules(cwd) ??
+    findNearestNodeModules(plannarDir) ??
+    findNearestNodeModules(tmpDir);
+
+  if (nodeModulesSource) {
+    symlinkSync(nodeModulesSource, join(tmpDir, "node_modules"), "dir");
+  }
 
   const planModule = compiled
     .replace(/export\s+default\s+function\s+MDXContent/g, "function Plan")
@@ -105,14 +149,12 @@ if (root) {
   );
 
   let cssImports = "";
-  if (options.globalCss) {
-    const globalCssAbs = resolve(cwd, options.globalCss);
-    const globalCssRel = relative(tmpDir, globalCssAbs).replaceAll("\\", "/");
+  const globalCssRel = resolveExistingCssImport(cwd, tmpDir, options.globalCss);
+  if (globalCssRel) {
     cssImports += `@import "${globalCssRel}";\n`;
   }
-  if (options.cssFilePath) {
-    const cssFilePathAbs = resolve(cwd, options.cssFilePath);
-    const cssFilePathRel = relative(tmpDir, cssFilePathAbs).replaceAll("\\", "/");
+  const cssFilePathRel = resolveExistingCssImport(cwd, tmpDir, options.cssFilePath);
+  if (cssFilePathRel) {
     cssImports += `@import "${cssFilePathRel}";\n`;
   }
 
@@ -157,21 +199,25 @@ ${cssImports}@source "${sourcePath}";
     "utf-8",
   );
 
-  writeFileSync(
-    join(tmpDir, "index.html"),
-    `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body><div id="root"></div><script type="module" src="/plan.tsx"></script></body>
-</html>`,
-    "utf-8",
-  );
-
   const outDir = join(tmpDir, "dist");
 
   const baseBuildConfig = {
     root: tmpDir,
-    build: { outDir, minify: false },
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
+    build: {
+      outDir,
+      minify: false,
+      cssCodeSplit: false,
+      lib: {
+        entry: join(tmpDir, "plan.tsx"),
+        name: "PlannarExport",
+        formats: ["es"] as const,
+        fileName: () => "plan.js",
+        cssFileName: "plan",
+      },
+    },
     plugins: [tailwindcss(), react(), inlineAssetsPlugin(outDir)],
     resolve: { alias: { "@": plannarDir } },
     logLevel: "warn" as const,
@@ -183,7 +229,26 @@ ${cssImports}@source "${sourcePath}";
 
   await build(buildConfig as Parameters<typeof build>[0]);
 
-  return readFileSync(join(outDir, "index.html"), "utf-8");
+  return injectBrowserProcessShim(readFileSync(join(outDir, "index.html"), "utf-8"));
+}
+
+function findNearestNodeModules(startDir: string): string | null {
+  let dir = resolve(startDir);
+
+  for (let i = 0; i < 10; i++) {
+    const candidate = join(dir, "node_modules");
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+
+    const parent = resolve(dir, "..");
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  return null;
 }
 
 function inlineAssetsPlugin(outDir: string): Plugin {

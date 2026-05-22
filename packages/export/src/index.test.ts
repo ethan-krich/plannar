@@ -43,6 +43,24 @@ describe("exportPlan", () => {
     return dir;
   }
 
+  function setupCustomPlannarCwd(planName: string, content: string) {
+    const dir = mkdtempSync(join(tmpdir(), "plannar-export-test-"));
+    tmpDirs.push(dir);
+
+    const plannarDir = join(dir, ".plans");
+    mkdirSync(plannarDir, { recursive: true });
+
+    cpSync(join(rootPlannar, "components"), join(plannarDir, "components"), { recursive: true });
+    cpSync(join(rootPlannar, "lib"), join(plannarDir, "lib"), { recursive: true });
+    symlinkSync(rootPlannar + "/node_modules", join(plannarDir, "node_modules"), "dir");
+
+    const plansDir = join(plannarDir, "plans");
+    mkdirSync(plansDir, { recursive: true });
+    writeFileSync(join(plansDir, `${planName}.mdx`), content, "utf-8");
+
+    return dir;
+  }
+
   it("exports a basic plan to a self-contained HTML file", async () => {
     const cwd = setupCwd("hello", "# Hello\n\nThis is a test plan.\n");
 
@@ -100,5 +118,25 @@ describe("exportPlan", () => {
 
     const outPath = await exportPlan("foo", { cwd });
     expect(outPath).toContain(".plannar/exports/foo.html");
+  });
+
+  it("skips missing derived global CSS for custom plannar folders", async () => {
+    const cwd = setupCustomPlannarCwd(
+      "styled",
+      '<div className="bg-fuchsia-500 text-white p-4 rounded-xl">Tailwind proof</div>',
+    );
+
+    const outPath = await exportPlan("styled", {
+      cwd,
+      plannarFolder: ".plans",
+      exportsFolder: ".plans/exports",
+      globalCss: ".plans/globals.css",
+    });
+    const html = readFileSync(outPath, "utf-8");
+
+    expect(html).toContain("Tailwind proof");
+    expect(html).toContain(".bg-fuchsia-500");
+    expect(html).not.toContain("process.env.NODE_ENV");
+    expect(outPath).toContain(".plans/exports/styled.html");
   });
 });
