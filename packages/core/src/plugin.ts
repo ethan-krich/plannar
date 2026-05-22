@@ -15,7 +15,10 @@ function hoistImports(code: string): string {
   return [...imports, ...rest].join("\n");
 }
 
-export function mdxPlugin(options?: { bindings?: Record<string, BindingMeta> }) {
+export function mdxPlugin(options?: {
+  bindings?: Record<string, BindingMeta>;
+  development?: boolean;
+}) {
   return {
     name: "mdx",
     async load(id: string) {

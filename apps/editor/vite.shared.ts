@@ -104,13 +104,25 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
         await generateMdx(planPath, {
           content: raw,
           bindings: shadcnBindings,
+          development: true,
         }),
       );
     },
     handleHotUpdate(ctx) {
-      const mod = ctx.server.moduleGraph.getModuleById("\0plannar-plans");
-      if (mod) {
-        void ctx.server.reloadModule(mod);
+      const plansListMod = ctx.server.moduleGraph.getModuleById("\0plannar-plans");
+
+      const plansPrefix = resolve(plansDir);
+      const pathSep = process.platform === "win32" ? "\\" : "/";
+      const prefix = `${plansPrefix}${pathSep}`;
+
+      if (ctx.file.startsWith(prefix) && ctx.file.endsWith(".mdx")) {
+        const slug = ctx.file.slice(prefix.length, -".mdx".length).replaceAll("\\", "/");
+        const planMod = ctx.server.moduleGraph.getModuleById(`\0plannar-plan/${slug}`);
+
+        if (plansListMod) void ctx.server.reloadModule(plansListMod);
+        if (planMod) void ctx.server.reloadModule(planMod);
+      } else if (plansListMod) {
+        void ctx.server.reloadModule(plansListMod);
       }
     },
   };
@@ -186,7 +198,7 @@ export function createEditorViteConfig({
     plugins: [
       tailwindcss(),
       react(),
-      mdxPlugin({ bindings: shadcnBindings }),
+      mdxPlugin({ bindings: shadcnBindings, development: true }),
       createPlannarPlansPlugin(plansDir),
       createGlobalCssPlugin(),
       createTailwindSourcePlugin(plannarRoot),

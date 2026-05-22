@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useMemo } from "react";
 
 interface PlanViewProps {
   slug: string;
@@ -40,7 +40,7 @@ function createPlanComponent(slug: string, navigate: (to: string) => void) {
 }
 
 export function PlanView({ slug, navigate }: PlanViewProps) {
-  const PlanComponent = createPlanComponent(slug, navigate);
+  const PlanComponent = useMemo(() => createPlanComponent(slug, navigate), [slug, navigate]);
 
   return (
     <div>
