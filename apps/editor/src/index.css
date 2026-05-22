@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@plannar/core/styles/theme.css";
-@source "../../../.plannar";
 
 @theme inline {
   --color-background: var(--background);

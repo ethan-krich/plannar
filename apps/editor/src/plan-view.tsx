@@ -5,7 +5,7 @@ interface PlanViewProps {
   navigate: (to: string) => void;
 }
 
-function PlanNotFound({ slug }: { slug: string }) {
+function PlanNotFound({ slug, navigate }: { slug: string; navigate: (to: string) => void }) {
   return (
     <div>
       <h1>Plan not found</h1>
@@ -17,8 +17,7 @@ function PlanNotFound({ slug }: { slug: string }) {
           href="/"
           onClick={(e) => {
             e.preventDefault();
-            window.history.pushState(null, "", "/");
-            window.dispatchEvent(new PopStateEvent("popstate"));
+            navigate("/");
           }}
         >
           &larr; Back
@@ -32,16 +31,16 @@ function Loading() {
   return <p>Loading plan...</p>;
 }
 
-function createPlanComponent(slug: string) {
+function createPlanComponent(slug: string, navigate: (to: string) => void) {
   return lazy(() =>
     import(/* @vite-ignore */ `/__plannar/plan/${slug}.js`).catch(() => ({
-      default: () => <PlanNotFound slug={slug} />,
+      default: () => <PlanNotFound slug={slug} navigate={navigate} />,
     })),
   );
 }
 
-export function PlanView({ slug }: PlanViewProps) {
-  const PlanComponent = createPlanComponent(slug);
+export function PlanView({ slug, navigate }: PlanViewProps) {
+  const PlanComponent = createPlanComponent(slug, navigate);
 
   return (
     <div>
@@ -50,8 +49,7 @@ export function PlanView({ slug }: PlanViewProps) {
           href="/"
           onClick={(e) => {
             e.preventDefault();
-            window.history.pushState(null, "", "/");
-            window.dispatchEvent(new PopStateEvent("popstate"));
+            navigate("/");
           }}
         >
           &larr; All plans

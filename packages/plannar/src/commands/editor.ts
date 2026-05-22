@@ -6,6 +6,11 @@ import { existsSync } from "node:fs";
 import { resolveConfig, merge } from "../config.js";
 
 function findEditorRoot(startDir: string): string {
+  const packagedEditor = resolve(startDir, "editor", "index.html");
+  if (existsSync(packagedEditor)) {
+    return resolve(startDir, "editor");
+  }
+
   let dir = startDir;
   for (let i = 0; i < 10; i++) {
     const candidate = resolve(dir, "apps/editor/index.html");
