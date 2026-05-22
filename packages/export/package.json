@@ -9,8 +9,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "development": "./src/index.ts",
+      "types": "./dist/index.d.mts",
+      "development": "./dist/index.mjs",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },

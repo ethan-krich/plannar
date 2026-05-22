@@ -11,7 +11,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node ./scripts/copy-editor-files.mjs",
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",
@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@plannar/core": "workspace:*",
+    "@plannar/export": "workspace:*",
+    "@plannar/registry-metadata": "workspace:*",
     "@tailwindcss/vite": "^4.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "citty": "^0.2.2",
@@ -34,9 +37,6 @@
     "vite": "catalog:"
   },
   "devDependencies": {
-    "@plannar/core": "workspace:*",
-    "@plannar/export": "workspace:*",
-    "@plannar/registry-metadata": "workspace:*",
     "@types/node": "^25.6.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
