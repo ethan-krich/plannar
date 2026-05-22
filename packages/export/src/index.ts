@@ -1,4 +1,5 @@
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -10,7 +11,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import { tmpdir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -92,7 +93,10 @@ function resolveExistingCssImport(cwd: string, tmpDir: string, cssPath?: string)
     return null;
   }
 
-  return relative(tmpDir, cssAbs).replaceAll("\\", "/");
+  const destName = `plannar-${basename(cssAbs)}`;
+  copyFileSync(cssAbs, join(tmpDir, destName));
+
+  return `./${destName}`;
 }
 
 function injectBrowserProcessShim(html: string): string {
