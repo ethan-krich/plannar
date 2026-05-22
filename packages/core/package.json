@@ -10,7 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "development": "./dist/index.mjs",
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
@@ -18,6 +18,10 @@
     "./styles/mdx.css": {
       "import": "./src/styles/mdx.css",
       "default": "./src/styles/mdx.css"
+    },
+    "./styles/theme.css": {
+      "import": "./src/styles/theme.css",
+      "default": "./src/styles/theme.css"
     },
     "./package.json": "./package.json"
   },

@@ -9,9 +9,9 @@ lerna-debug.log*
 
 node_modules
 dist
-!packages/core/dist
 dist-ssr
 *.local
+apps/editor/vite.shared.d.ts
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +27,7 @@ dist-ssr
 # AI agents
 .claude/worktrees/
 .playwright-mcp
+.context/
+
+# Plannar exports (build artifacts)
+.plannar/exports/

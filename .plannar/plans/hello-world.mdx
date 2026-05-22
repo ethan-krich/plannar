@@ -1,0 +1,31 @@
+import { Button } from "@/components/ui/button";
+
+# Hello, Plannar!
+
+Welcome to your first plan. Plans are interactive MDX documents with
+live components powered by shadcn/ui.
+
+## Try It
+
+Type something below and watch it update in real time:
+
+<Playground>
+  <input
+    bind="text:'Hello world'"
+    placeholder="Type something..."
+    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
+  />
+  <p>You typed: {text}</p>
+</Playground>
+
+<Playground>
+  <Button bind="count:0" onClick={() => setCount(count + 1)} variant="outline">
+    Clicked {count} times
+  </Button>
+</Playground>
+
+## Next Steps
+
+- Create more plans in `.plannar/plans/`
+- Run `plannar editor` to preview them
+- Run `plannar export <name>` to export as HTML
