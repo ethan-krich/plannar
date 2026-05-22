@@ -20,6 +20,24 @@ const DEFAULTS: PlannarConfig = {
   globalCss: ".plannar/globals.css",
 };
 
+function applyDerivedDefaults(
+  config: PlannarConfig,
+  overrides: {
+    exportsFolder?: boolean;
+    globalCss?: boolean;
+  },
+): PlannarConfig {
+  if (!overrides.exportsFolder) {
+    config.exportsFolder = `${config.plannarFolder}/exports`;
+  }
+
+  if (!overrides.globalCss) {
+    config.globalCss = `${config.plannarFolder}/globals.css`;
+  }
+
+  return config;
+}
+
 async function loadConfigFile(filePath: string): Promise<Partial<PlannarConfig> | null> {
   if (!existsSync(filePath)) return null;
 
@@ -89,11 +107,10 @@ export async function resolveConfig(cwd: string = process.cwd()): Promise<Planna
     ) as unknown as PlannarConfig;
   }
 
-  if (!localConfig?.exportsFolder && !globalConfig?.exportsFolder) {
-    merged.exportsFolder = `${merged.plannarFolder}/exports`;
-  }
-
-  return merged;
+  return applyDerivedDefaults(merged, {
+    exportsFolder: Boolean(localConfig?.exportsFolder || globalConfig?.exportsFolder),
+    globalCss: Boolean(localConfig?.globalCss || globalConfig?.globalCss),
+  });
 }
 
 export function resolvePath(cwd: string, configPath: string): string {

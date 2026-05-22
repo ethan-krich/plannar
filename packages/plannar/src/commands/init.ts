@@ -9,7 +9,7 @@ const componentsJson = {
   tsx: true,
   tailwind: {
     config: "",
-    css: "src/index.css",
+    css: "globals.css",
     baseColor: "neutral",
     cssVariables: true,
     prefix: "",
