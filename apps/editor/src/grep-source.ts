@@ -90,7 +90,6 @@ function formatLoc(c: { file: string; line: number | null; lineEnd: number | nul
 }
 
 function truncateContext(anchor: CommentAnchor): string {
-  const text = anchor.type === "text" ? anchor.text : anchor.text;
-  const cleaned = text.replace(/\s+/g, " ").trim();
+  const cleaned = anchor.text.replace(/\s+/g, " ").trim();
   return cleaned.length > 80 ? cleaned.slice(0, 77) + "..." : cleaned;
 }
