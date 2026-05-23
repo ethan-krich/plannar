@@ -19,6 +19,16 @@ export const shadcnBindings: Record<string, BindingMeta> = {
   },
 };
 
+function resolveUserMeta(): Record<string, BindingMeta> {
+  const raw = process.env.PLANNAR_META;
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, BindingMeta>;
+  } catch {
+    return {};
+  }
+}
+
 const SAFE_PLAN_SEGMENT = /^[a-z0-9][a-z0-9_-]*$/;
 
 export function isSafePlanSlug(slug: string): boolean {
@@ -56,7 +66,7 @@ function hoistImports(code: string): string {
   return [...imports, ...rest].join("\n");
 }
 
-function createPlannarPlansPlugin(plansDir: string): Plugin {
+function createPlannarPlansPlugin(plansDir: string, bindings: Record<string, BindingMeta>): Plugin {
   return {
     name: "plannar-plans",
     resolveId(id: string) {
@@ -126,7 +136,7 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
       return hoistImports(
         await generateMdx(planPath, {
           content: raw,
-          bindings: shadcnBindings,
+          bindings,
           development: true,
         }),
       );
@@ -219,12 +229,14 @@ export function createEditorViteConfig({
   const plannarRoot = join(workspaceRoot, plannarFolder);
   const plansDir = join(plannarRoot, "plans");
 
+  const bindings = { ...shadcnBindings, ...resolveUserMeta() };
+
   return {
     plugins: [
       tailwindcss(),
       react(),
-      mdxPlugin({ bindings: shadcnBindings, development: true }),
-      createPlannarPlansPlugin(plansDir),
+      mdxPlugin({ bindings, development: true }),
+      createPlannarPlansPlugin(plansDir, bindings),
       createGlobalCssPlugin(),
       createTailwindSourcePlugin(plannarRoot),
     ],

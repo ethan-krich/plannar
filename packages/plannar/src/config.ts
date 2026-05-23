@@ -2,12 +2,14 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { createJiti } from "jiti";
+import type { BindingMeta } from "@plannar/core";
 
 export type PlannarConfig = {
   plannarFolder: string;
   exportsFolder: string;
   globalCss?: string;
   cssFilePath?: string;
+  meta?: Record<string, BindingMeta>;
   viteConfig?: {
     editor?: Record<string, unknown>;
     exports?: Record<string, unknown>;

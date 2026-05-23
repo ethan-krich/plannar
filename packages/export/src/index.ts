@@ -17,6 +17,7 @@ import { build, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { generateMdx } from "@plannar/core";
+import type { BindingMeta } from "@plannar/core";
 import { shadcnBindings } from "@plannar/registry-metadata";
 
 const pkgDir = dirname(fileURLToPath(import.meta.url));
@@ -27,6 +28,7 @@ export type ExportOptions = {
   exportsFolder?: string;
   globalCss?: string;
   cssFilePath?: string;
+  meta?: Record<string, BindingMeta>;
   viteConfig?: Record<string, unknown>;
 };
 
@@ -38,7 +40,7 @@ export async function exportPlan(planName: string, options: ExportOptions = {}):
   const planPath = join(cwd, plannarFolder, "plans", `${planName}.mdx`);
 
   const compiled = await generateMdx(planPath, {
-    bindings: shadcnBindings,
+    bindings: { ...shadcnBindings, ...options.meta },
   });
 
   const tmpDir = mkdtempSync(join(tmpdir(), "plannar-export-"));

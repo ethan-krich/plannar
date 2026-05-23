@@ -140,15 +140,31 @@ Plannar resolves config merged **local > global > defaults**. JS/TS configs load
 
 ### Fields
 
-| Field           | Type      | Default                  | Description                                                 |
-| --------------- | --------- | ------------------------ | ----------------------------------------------------------- |
-| `plannarFolder` | `string`  | `".plannar"`             | Root folder for plans, components, and config               |
-| `exportsFolder` | `string`  | `".plannar/exports"`     | Output directory for exported HTML                          |
-| `globalCss`     | `string?` | `".plannar/globals.css"` | CSS that overrides builtin styles                           |
-| `cssFilePath`   | `string?` | _none_                   | Additional CSS loaded alongside `globalCss`                 |
-| `viteConfig`    | `object?` | _none_                   | Deep-merged Vite overrides: `{ editor?: {}, exports?: {} }` |
+| Field           | Type                          | Default                  | Description                                                  |
+| --------------- | ----------------------------- | ------------------------ | ------------------------------------------------------------ |
+| `plannarFolder` | `string`                      | `".plannar"`             | Root folder for plans, components, and config                |
+| `exportsFolder` | `string`                      | `".plannar/exports"`     | Output directory for exported HTML                           |
+| `globalCss`     | `string?`                     | `".plannar/globals.css"` | CSS that overrides builtin styles                            |
+| `cssFilePath`   | `string?`                     | _none_                   | Additional CSS loaded alongside `globalCss`                  |
+| `meta`          | `Record<string,BindingMeta>?` | _none_                   | Custom component bindings merged with built-in registrations |
+| `viteConfig`    | `object?`                     | _none_                   | Deep-merged Vite overrides: `{ editor?: {}, exports?: {} }`  |
 
 `exportsFolder` and `globalCss` derive from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `globalCss` becomes `.my-plans/globals.css`. An explicit `globalCss` is preserved regardless.
+
+The `meta` field registers custom component bindings so user components support the `bind` prop in Playground blocks. Each entry maps a component name to a `BindingMeta` object with `valueProp`, `changeProp`, `extract`, and optional `inject`:
+
+```js
+// plannar.config.js
+export default {
+  meta: {
+    "my-input": {
+      valueProp: "value",
+      changeProp: "onValueChange",
+      extract: "e",
+    },
+  },
+};
+```
 
 Run `plannar init` to scaffold `.plannar/` with `components.json`, `config.json`, `globals.css`, and `plans/hello-world.mdx`.
 
