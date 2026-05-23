@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState, useEffect, type ReactNode } from "react";
-import { useCommentState, type CommentAnchor } from "./comment-state.js";
+import type { CommentAnchor } from "./comment-state.js";
+import { useCommentState } from "./comment-state.js";
 import { CommentBox } from "./comment-box.js";
 import type { PlanSource } from "./grep-source.js";
 
@@ -27,6 +28,26 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
       .catch(() => setSource(null));
   }, [mode, planFile]);
 
+  useEffect(() => {
+    if (!mode || !overlayRef.current) return;
+    const container = overlayRef.current;
+    const els = container.querySelectorAll("[data-commentable]");
+    for (const el of els) el.classList.remove("plannar-section-highlight");
+
+    const headings = container.querySelectorAll(
+      "h1[data-commentable], h2[data-commentable], h3[data-commentable], h4[data-commentable], h5[data-commentable], h6[data-commentable]",
+    );
+    for (const heading of headings) {
+      const level = parseInt(heading.tagName[1]);
+      let next: Element | null = heading.nextElementSibling;
+      while (next) {
+        if (/^H[1-6]$/.test(next.tagName) && parseInt(next.tagName[1]) <= level) break;
+        next.classList.add("plannar-section-highlight");
+        next = next.nextElementSibling;
+      }
+    }
+  }, [mode]);
+
   const handleMouseUp = useCallback(() => {
     if (!mode) return;
     const sel = window.getSelection();
@@ -53,6 +74,12 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
 
       const tag = el.dataset.commentable || "element";
       const text = el.textContent?.replace(/\s+/g, " ").trim() || el.dataset.commentableText || "";
+
+      clearHighlights();
+      if (tag === "heading") {
+        highlightSection(el);
+      }
+
       const rect = el.getBoundingClientRect();
 
       setTarget({
@@ -63,7 +90,10 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
     [mode],
   );
 
-  const closeBox = useCallback(() => setTarget(null), []);
+  const closeBox = useCallback(() => {
+    setTarget(null);
+    clearHighlights();
+  }, []);
 
   return (
     <div
@@ -84,4 +114,21 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
       )}
     </div>
   );
+}
+
+function clearHighlights() {
+  for (const el of document.querySelectorAll(".plannar-section-selected")) {
+    el.classList.remove("plannar-section-selected");
+  }
+}
+
+function highlightSection(heading: Element) {
+  heading.classList.add("plannar-section-selected");
+  const level = parseInt(heading.tagName[1]);
+  let next: Element | null = heading.nextElementSibling;
+  while (next) {
+    if (/^H[1-6]$/.test(next.tagName) && parseInt(next.tagName[1]) <= level) break;
+    next.classList.add("plannar-section-selected");
+    next = next.nextElementSibling;
+  }
 }

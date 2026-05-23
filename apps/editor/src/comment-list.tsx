@@ -46,7 +46,9 @@ function CommentItem({
       <div className="mb-1 flex items-center gap-1.5">
         {comment.line && (
           <span className="inline-flex h-4 items-center rounded border border-border px-1 text-[9px] font-mono text-muted-foreground">
-            L{comment.line}
+            {comment.lineEnd && comment.lineEnd > comment.line
+              ? `L${comment.line}-${comment.lineEnd}`
+              : `L${comment.line}`}
           </span>
         )}
         <span className="text-[10px] text-muted-foreground truncate">{comment.file}</span>

@@ -10,6 +10,7 @@ export type Comment = {
   content: string;
   file: string;
   line: number | null;
+  lineEnd: number | null;
   timestamp: number;
 };
 
@@ -17,7 +18,13 @@ type CommentContextType = {
   mode: boolean;
   toggleMode: () => void;
   comments: Comment[];
-  addComment: (anchor: CommentAnchor, content: string, file: string, line?: number) => void;
+  addComment: (
+    anchor: CommentAnchor,
+    content: string,
+    file: string,
+    line?: number,
+    lineEnd?: number,
+  ) => void;
   removeComment: (id: string) => void;
   editComment: (id: string, content: string) => void;
   clearComments: () => void;
@@ -34,7 +41,7 @@ export function CommentProvider({ children }: { children: ReactNode }) {
   const toggleMode = useCallback(() => setMode((m) => !m), []);
 
   const addComment = useCallback(
-    (anchor: CommentAnchor, content: string, file: string, line?: number) => {
+    (anchor: CommentAnchor, content: string, file: string, line?: number, lineEnd?: number) => {
       if (!content.trim()) return;
       const id = `comment-${++nextId}`;
       setComments((prev) => [
@@ -45,6 +52,7 @@ export function CommentProvider({ children }: { children: ReactNode }) {
           content: content.trim(),
           file,
           line: line ?? null,
+          lineEnd: lineEnd ?? null,
           timestamp: Date.now(),
         },
       ]);

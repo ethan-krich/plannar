@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, X } from "lucide-react";
 import { Textarea } from "./components/ui/textarea.js";
 import { useCommentState, type CommentAnchor } from "./comment-state.js";
-import { findLineNumber, type PlanSource } from "./grep-source.js";
+import { findLineRange, type PlanSource } from "./grep-source.js";
 import { cn } from "./lib/utils.js";
 
 type CommentBoxProps = {
@@ -35,8 +35,8 @@ export function CommentBox({ anchor, position, file, source, onClose }: CommentB
 
   const handleSubmit = useCallback(() => {
     if (!text.trim()) return;
-    const line = source ? findLineNumber(anchor, source) : null;
-    addComment(anchor, text, file, line ?? undefined);
+    const range = source ? findLineRange(anchor, source) : null;
+    addComment(anchor, text, file, range?.start, range?.end);
     onClose();
   }, [text, anchor, file, source, addComment, onClose]);
 
@@ -93,8 +93,7 @@ export function CommentBox({ anchor, position, file, source, onClose }: CommentB
         className="mb-2.5 min-h-12 text-xs"
       />
 
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] text-muted-foreground">Plain English, like Google Docs</span>
+      <div className="flex items-center justify-end">
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}

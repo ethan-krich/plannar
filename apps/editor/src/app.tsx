@@ -3,9 +3,10 @@ import { TooltipProvider } from "./components/ui/tooltip.js";
 import { CommentProvider, useCommentState } from "./comment-state.js";
 import { CommentToggle } from "./comment-toggle.js";
 import { CommentList } from "./comment-list.js";
-import { PromptDialog } from "./prompt-dialog.js";
+import { generatePrompt } from "./grep-source.js";
 import { PlanList } from "./plan-list.js";
 import { PlanView } from "./plan-view.js";
+import { Check, Copy } from "lucide-react";
 
 function useRoute() {
   const [path, setPath] = useState(window.location.pathname);
@@ -26,7 +27,15 @@ function useRoute() {
 
 function CommentTools() {
   const { mode, comments } = useCommentState();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyPrompt = useCallback(() => {
+    const prompt = generatePrompt(comments);
+    void navigator.clipboard.writeText(prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [comments]);
 
   if (!mode) return <CommentToggle />;
 
@@ -36,13 +45,13 @@ function CommentTools() {
       <CommentList />
       {comments.length > 0 && (
         <button
-          onClick={() => setDialogOpen(true)}
+          onClick={handleCopyPrompt}
           className="fixed bottom-6 right-20 z-40 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg hover:bg-primary/80 transition-colors"
         >
-          Generate prompt ({comments.length})
+          {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+          {copied ? "Copied" : `Generate prompt (${comments.length})`}
         </button>
       )}
-      <PromptDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>
   );
 }
