@@ -53,8 +53,9 @@ function MarkCommentable({ children }: { children: React.ReactNode }) {
   const { mode } = useCommentState();
 
   useEffect(() => {
-    if (!ref.current || !mode) return;
+    if (!ref.current) return;
     clearCommentable(ref.current);
+    if (!mode) return;
     const headings = ref.current.querySelectorAll("h1, h2, h3, h4, h5, h6");
     for (const el of headings) {
       (el as HTMLElement).dataset.commentable = "heading";
