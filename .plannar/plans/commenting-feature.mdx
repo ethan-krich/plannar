@@ -1,0 +1,417 @@
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverHeader,
+  PopoverTitle,
+} from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquarePlus, MessageSquare, X, Send, Copy } from "lucide-react";
+
+# Inline Commenting for Plans
+
+Allow users to leave comments anchored to specific positions in a plan document. The editor collects comments, maps them to MDX source lines via grep, and generates an LLM-ready prompt string.
+
+---
+
+## Core Workflow
+
+| Step  | Action                                                              | UI                             |
+| ----- | ------------------------------------------------------------------- | ------------------------------ |
+| **1** | Toggle **Comment Mode** via floating toolbar button                 | Icon button with active state  |
+| **2** | **Select text** or **hover-click an element** (heading, playground) | Highlight ring + cursor change |
+| **3** | Comment box appears anchored to the selection                       | Popover with textarea          |
+| **4** | User types feedback, submits                                        | Comment saved to state         |
+| **5** | `grep` finds the relevant MDX source line                           | Beep boop                      |
+| **6** | **Generated prompt** is copied to clipboard                         | Dialog with code block         |
+
+---
+
+## UI Design
+
+### 1. Comment Toggle Button
+
+Floating in the bottom-right corner. Toggles comment mode on/off. Shows active state with a subtle pulse ring.
+
+<Playground>
+  <div className="not-prose relative flex items-center gap-4 rounded-xl border border-border bg-card p-6">
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Off</span>
+      <button className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+        <MessageSquarePlus className="size-4" />
+      </button>
+    </div>
+
+    <span className="text-muted-foreground">→</span>
+
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[10px] uppercase tracking-wider text-primary">On</span>
+      <button className="inline-flex size-9 animate-pulse items-center justify-center rounded-lg border border-primary/50 bg-primary/10 text-primary ring-2 ring-primary/20">
+        <MessageSquarePlus className="size-4" />
+      </button>
+    </div>
+
+    <span className="mx-2 text-xs text-muted-foreground">— OR —</span>
+
+
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-1">
+      <button className="inline-flex size-7 items-center justify-center rounded-md bg-background text-foreground shadow-sm">
+        <MessageSquarePlus className="size-3.5" />
+      </button>
+      <button className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground">
+        <MessageSquare className="size-3.5" />
+      </button>
+    </div>
+
+  </div>
+</Playground>
+
+---
+
+### 2. Text Selection → Comment Box
+
+When comment mode is active and the user selects text, a floating comment box appears near the selection. If no text is selected but the user clicks a highlighted element, the box anchors to that element.
+
+<Playground>
+  <TooltipProvider delay={0}>
+    <div className="not-prose space-y-4 rounded-xl border border-border bg-card p-6">
+      
+      <div className="space-y-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Selected text</span>
+        <div className="text-sm text-foreground">The editor collects comments, maps them to{' '}<mark className="rounded-sm bg-primary/15 px-0.5 text-primary">MDX source lines via grep</mark>, and generates an LLM-ready prompt.</div>
+      </div>
+
+      <div className="relative mt-3">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Comment box appears</span>
+        <div className="mt-1.5 w-80 rounded-xl border border-border bg-popover p-3.5 text-sm shadow-lg ring-1 ring-foreground/5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Commenting on selected text
+            </span>
+            <button className="inline-flex size-5 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+              <X className="size-3" />
+            </button>
+          </div>
+
+
+          <div className="mb-3 rounded-md border-l-2 border-primary/30 bg-muted/50 px-2.5 py-1.5 text-xs italic text-muted-foreground">
+            &ldquo;MDX source lines via grep&rdquo;
+          </div>
+
+
+          <textarea
+            disabled
+            rows={2}
+            placeholder="Type your comment here..."
+            className="mb-2.5 w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
+          />
+
+
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground">Plain English, like Google Docs</span>
+            <button className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/80">
+              <Send className="size-3" />
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </TooltipProvider>
+</Playground>
+
+---
+
+### 3. Element Highlighting (Headings, Playgrounds, Code Blocks)
+
+When comment mode is on, interactive elements gain a hover highlight ring. Clicking them opens the same comment box (without text selection).
+
+<Playground>
+  <div className="not-prose space-y-4 rounded-xl border border-border bg-card p-6">
+    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Hover → Click to comment</span>
+
+    <div className="group relative rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.02] p-3 transition-all hover:border-primary/60 cursor-pointer">
+      <h3 className="text-base font-semibold text-foreground">
+        Core Workflow
+      </h3>
+      <div className="mt-1 flex items-center gap-2">
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">2 comments</Badge>
+        <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">
+          Click to add comment
+        </span>
+      </div>
+    </div>
+
+
+    <div className="group relative rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.02] p-3 transition-all hover:border-primary/60 cursor-pointer">
+      <div className="flex items-center gap-2">
+        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+          &lt;Playground&gt;
+        </span>
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5">1 comment</Badge>
+      </div>
+      <div className="mt-2 rounded-md border border-border bg-background p-3 text-xs text-muted-foreground opacity-60">
+
+        <input disabled defaultValue="Hello world" className="h-7 w-48 rounded border border-border bg-muted/50 px-2 text-xs" />
+      </div>
+      <span className="mt-1 block text-[10px] text-muted-foreground group-hover:text-primary transition-colors">
+        Click to add comment
+      </span>
+    </div>
+
+
+    <div className="group relative rounded-lg border-2 border-dashed border-primary/30 bg-primary/[0.02] p-3 transition-all hover:border-primary/60 cursor-pointer">
+      <span className="text-[10px] font-mono font-medium text-muted-foreground">```ts</span>
+      <pre className="mt-1 rounded-md bg-zinc-950 p-2.5 text-[11px] text-zinc-300 opacity-60">
+        <code>function greet(name: string) {"{"}{"\n"}  return `Hello, ${"{"}name{"}"}!`;{"\n"}{"}"}</code>
+      </pre>
+      <span className="mt-1 block text-[10px] text-muted-foreground group-hover:text-primary transition-colors">
+        Click to add comment
+      </span>
+    </div>
+
+  </div>
+</Playground>
+
+---
+
+### 4. Comment Indicators & Collected Comments Sidebar
+
+Comments are collected in a sidebar/panel. Each shows the element context, the comment text, and options to edit/delete.
+
+<Playground>
+  <div className="not-prose space-y-4 rounded-xl border border-border bg-card p-6">
+    <div className="flex items-center justify-between">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Comments sidebar</span>
+      <Badge variant="secondary" className="text-[10px] h-5 px-1.5">4 comments</Badge>
+    </div>
+
+    <div className="space-y-2.5">
+
+      <div className="rounded-lg border border-border bg-background p-3 text-sm">
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">L176</Badge>
+          <span className="text-[10px] text-muted-foreground">hello-world.mdx</span>
+        </div>
+        <div className="mb-2 rounded border-l-2 border-primary/30 bg-muted/50 px-2 py-1 text-xs italic text-muted-foreground">
+          &ldquo;Update the design system&rdquo;
+        </div>
+        <p className="text-xs text-foreground">Use shadcn/ui components instead of raw HTML elements</p>
+        <div className="mt-2 flex gap-1">
+          <button className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground">Edit</button>
+          <button className="rounded px-1.5 py-0.5 text-[10px] text-destructive hover:bg-destructive/10">Delete</button>
+        </div>
+      </div>
+
+
+      <div className="rounded-lg border border-border bg-background p-3 text-sm">
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">L191</Badge>
+          <span className="text-[10px] text-muted-foreground">hello-world.mdx</span>
+        </div>
+        <div className="mb-2 rounded border-l-2 border-primary/30 bg-muted/50 px-2 py-1 text-xs italic text-muted-foreground">
+          &ldquo;I will use GCP as the backend&rdquo;
+        </div>
+        <p className="text-xs text-foreground">Let&apos;s use AWS instead — we already have infra set up</p>
+        <div className="mt-2 flex gap-1">
+          <button className="rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground">Edit</button>
+          <button className="rounded px-1.5 py-0.5 text-[10px] text-destructive hover:bg-destructive/10">Delete</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</Playground>
+
+---
+
+### 5. Generated Prompt Output
+
+When the user is done, the system runs `grep` against the MDX source files to find exact line numbers for each comment anchor. It then generates a prompt string like the one below.
+
+<Playground>
+  <div className="not-prose overflow-hidden rounded-xl border border-border bg-card">
+    
+    <div className="flex items-center justify-between border-b border-border px-5 py-3">
+      <div>
+        <h3 className="text-sm font-medium text-foreground">Generated Prompt</h3>
+        <p className="text-[11px] text-muted-foreground">Ready to paste into any LLM</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground hover:bg-muted">
+          <Copy className="size-3" />
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <div className="bg-zinc-950 p-5">
+      <pre className="whitespace-pre-wrap text-[12px] leading-relaxed text-zinc-300 font-mono">
+        <code>{`The user left the following comments for you to address:
+
+line 176 .plannar/plans/hello-world: "Update the design system" — use shadcn/ui instead of raw HTML elements
+line 191 .plannar/plans/hello-world: "I will use GCP as the backend" — let's do AWS instead, we already have infra set up
+line 204 .plannar/plans/hello-world: "Add auth flow diagram" — include an OAuth2 PKCE flow with sequence diagram
+line 218 .plannar/plans/hello-world: "Set up CI/CD pipeline" — use GitHub Actions with matrix build for all platforms`}</code>
+
+</pre>
+</div>
+
+    <div className="flex items-center justify-between border-t border-border bg-muted/30 px-5 py-2.5">
+      <span className="text-[10px] text-muted-foreground">
+        grep -n "the selected text" .plannar/plans/*.mdx
+      </span>
+      <span className="text-[10px] text-muted-foreground">4 comments · 2 files</span>
+    </div>
+
+  </div>
+</Playground>
+
+---
+
+## How Grep Maps Comments to MDX Lines
+
+The editor already has access to the raw MDX source (loaded by the Vite plugin). When a user selects text or clicks an element, the system:
+
+1. **Records the anchor** — either the selected text string, or the element&rsquo;s heading text / <span className="rounded bg-muted px-1 py-0.5 text-xs font-mono">&lt;Playground&gt;</span> index
+2. **Searches the source** — runs <span className="rounded bg-muted px-1 py-0.5 text-xs font-mono">grep -n</span> against `.plannar/plans/*.mdx` to find the line number
+3. **Resolves dups** — if multiple files match, the current file takes priority
+4. **Generates output** — formats as `line N file: "quoted context" — comment text`
+
+<Playground>
+  <div className="not-prose space-y-3 rounded-xl border border-border bg-card p-6">
+    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Grep resolution</span>
+
+    <div className="space-y-2">
+
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">ANCHOR</Badge>
+          <span className="text-xs font-medium text-foreground">Selected text: &ldquo;design system&rdquo;</span>
+        </div>
+        <code className="text-[11px] text-muted-foreground">
+          File: .plannar/plans/hello-world.mdx
+        </code>
+      </div>
+
+
+      <div className="flex justify-center">
+        <span className="text-xs text-muted-foreground">grep -n &quot;design system&quot; .plannar/plans/hello-world.mdx</span>
+      </div>
+
+
+      <div className="rounded-lg border border-border bg-zinc-950 p-3">
+        <code className="text-[11px] text-zinc-300">
+          176:Update the design system to use the latest tokens
+        </code>
+      </div>
+
+
+      <div className="flex justify-center">
+        <span className="text-xs text-muted-foreground">↓ resolved to</span>
+      </div>
+
+
+      <div className="rounded-lg border border-primary/30 bg-primary/[0.03] p-3">
+        <code className="text-[11px] text-foreground">
+          line 176 .plannar/plans/hello-world: &ldquo;design system&rdquo; → &ldquo;use shadcn/ui&rdquo;
+        </code>
+      </div>
+    </div>
+
+  </div>
+</Playground>
+
+---
+
+## Component Tree
+
+Here&rsquo;s the React component architecture for the feature:
+
+| Component         | Responsibility                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| `CommentProvider` | Context provider — holds comment mode state, collected comments, manages add/edit/delete |
+| `CommentToggle`   | Floating toggle button with `MessageSquarePlus` icon                                     |
+| `CommentOverlay`  | Wraps plan content — intercepts selections and hover-clicks when mode is on              |
+| `CommentBox`      | Popover with textarea, quote preview, and submit button                                  |
+| `CommentList`     | Sidebar/panel showing all collected comments                                             |
+| `CommentItem`     | Single comment card with context, text, line ref, edit/delete                            |
+| `PromptDialog`    | Dialog showing the generated LLM prompt with copy button                                 |
+
+---
+
+## Implementation Steps
+
+### Phase 1 — State & Toggle
+
+1. **`useCommentState` hook** — `{ mode, comments: Comment[], toggle, addComment, removeComment, editComment }`
+2. **`CommentToggle` component** — floating button in bottom-right, animated icon on mode toggle
+3. Wire into `App` or `PlanView` via context
+
+### Phase 2 — Text Selection
+
+1. **`CommentOverlay`** wraps plan content with `onMouseUp` listener
+2. On `mouseup` in comment mode, read `window.getSelection()`
+3. If text selected, show `CommentBox` positioned near selection
+4. On submit, store comment with selected text + file + scroll position
+
+### Phase 3 — Element Highlighting
+
+1. When comment mode is on, use `onMouseOver` to highlight interactive elements
+2. `data-commentable` attribute marks headings, playgrounds, code blocks
+3. Clicking an element opens `CommentBox` anchored to that element
+4. Store comment with element type + heading text / playground index
+
+### Phase 4 — Grep & Prompt Generation
+
+1. Add `grepLineNumber(anchor: CommentAnchor): Promise<number>` utility
+2. Uses `child_process.execSync` with `grep -n` against the plans directory
+3. Falls back gracefully if grep fails (show warning, comment without line number)
+4. `generatePrompt(comments: Comment[]): string` — formats the final output
+
+### Phase 5 — Polish
+
+1. Animations for comment box open/close
+2. Keyboard shortcut (`Esc` to exit comment mode, `Enter` to submit)
+3. Toast notification when prompt is copied
+4. HMR-safe — comments survive hot reload (optionally)
+
+---
+
+## Files to Create or Modify
+
+| File                                  | Action     | Description                                        |
+| ------------------------------------- | ---------- | -------------------------------------------------- |
+| `apps/editor/src/comment-state.ts`    | **Create** | `useCommentState` hook + `CommentProvider` + types |
+| `apps/editor/src/comment-toggle.tsx`  | **Create** | Floating toggle button                             |
+| `apps/editor/src/comment-overlay.tsx` | **Create** | Selection/element interception wrapper             |
+| `apps/editor/src/comment-box.tsx`     | **Create** | Popover comment input                              |
+| `apps/editor/src/comment-list.tsx`    | **Create** | Sidebar showing collected comments                 |
+| `apps/editor/src/prompt-dialog.tsx`   | **Create** | Dialog showing generated prompt                    |
+| `apps/editor/src/grep.ts`             | **Create** | Grep utility for line number resolution            |
+| `apps/editor/src/app.tsx`             | **Modify** | Wrap with `CommentProvider`, add `CommentToggle`   |
+| `apps/editor/src/plan-view.tsx`       | **Modify** | Wrap plan with `CommentOverlay`                    |
+| `packages/core/src/styles/mdx.css`    | **Modify** | Add `.commentable` highlight styles                |
+
+---
+
+## Edge Cases
+
+- **No text selected** — comment anchors to the nearest parent element (heading, playground)
+- **Duplicate matches in grep** — prefer exact match, fall back to first match in current file
+- **File not found** — show warning, store comment without line reference
+- **Comment mode + Playground interaction** — comment mode disables playground bindings (or they coexist with separate click targets)
+- **Long selections** — truncate quoted context in sidebar to ~80 chars
+- **Empty comment** — prevent submission, show validation
