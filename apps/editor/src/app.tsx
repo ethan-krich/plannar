@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { TooltipProvider } from "./components/ui/tooltip.js";
+import { Toaster } from "./components/ui/sonner.js";
 import { CommentProvider, useCommentState } from "./comment-state.js";
 import { CommentToggle } from "./comment-toggle.js";
 import { CommentList } from "./comment-list.js";
@@ -74,6 +75,7 @@ export function App() {
           </main>
         )}
         <CommentTools />
+        <Toaster />
       </CommentProvider>
     </TooltipProvider>
   );

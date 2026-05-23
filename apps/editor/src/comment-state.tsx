@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { toast } from "sonner";
 
 export type CommentAnchor =
   | { type: "text"; text: string }
@@ -34,15 +35,32 @@ const CommentContext = createContext<CommentContextType | null>(null);
 
 let nextId = 0;
 
+const TIP_TOAST_ID = "comment-tip";
+
 export function CommentProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
 
-  const toggleMode = useCallback(() => setMode((m) => !m), []);
+  const toggleMode = useCallback(() => {
+    setMode((m) => {
+      const next = !m;
+      if (next) {
+        toast("Highlight text or click on a section to comment", {
+          id: TIP_TOAST_ID,
+          duration: Infinity,
+          dismissible: true,
+        });
+      } else {
+        toast.dismiss(TIP_TOAST_ID);
+      }
+      return next;
+    });
+  }, []);
 
   const addComment = useCallback(
     (anchor: CommentAnchor, content: string, file: string, line?: number, lineEnd?: number) => {
       if (!content.trim()) return;
+      toast.dismiss(TIP_TOAST_ID);
       const id = `comment-${++nextId}`;
       setComments((prev) => [
         ...prev,
