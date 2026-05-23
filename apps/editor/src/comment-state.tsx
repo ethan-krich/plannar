@@ -36,6 +36,15 @@ const CommentContext = createContext<CommentContextType | null>(null);
 let nextId = 0;
 
 const TIP_TOAST_ID = "comment-tip";
+const TIP_COOKIE = "plannar-comment-tip-seen";
+
+function hasSeenTip(): boolean {
+  return document.cookie.includes(`${TIP_COOKIE}=1`);
+}
+
+function markTipSeen(): void {
+  document.cookie = `${TIP_COOKIE}=1; max-age=31536000; path=/; SameSite=Lax`;
+}
 
 export function CommentProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState(false);
@@ -45,11 +54,15 @@ export function CommentProvider({ children }: { children: ReactNode }) {
     setMode((m) => {
       const next = !m;
       if (next) {
-        toast("Highlight text or click on a section to comment", {
-          id: TIP_TOAST_ID,
-          duration: Infinity,
-          dismissible: true,
-        });
+        if (!hasSeenTip()) {
+          toast("Highlight text or click on a section to comment", {
+            id: TIP_TOAST_ID,
+            duration: Infinity,
+            dismissible: true,
+            onDismiss: markTipSeen,
+            onAutoClose: markTipSeen,
+          });
+        }
       } else {
         toast.dismiss(TIP_TOAST_ID);
       }

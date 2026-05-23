@@ -5,6 +5,11 @@ import { useCommentState } from "./comment-state.js";
 import { CommentBox } from "./comment-box.js";
 import type { PlanSource } from "./grep-source.js";
 
+function dismissTip() {
+  toast.dismiss("comment-tip");
+  document.cookie = "plannar-comment-tip-seen=1; max-age=31536000; path=/; SameSite=Lax";
+}
+
 type CommentTarget = {
   anchor: CommentAnchor;
   position: { x: number; y: number };
@@ -36,7 +41,7 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
     const text = sel.toString().trim();
     if (!text) return;
 
-    toast.dismiss("comment-tip");
+    dismissTip();
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setTarget({
@@ -57,7 +62,7 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
       const tag = el.dataset.commentable || "element";
       const text = el.textContent?.replace(/\s+/g, " ").trim() || el.dataset.commentableText || "";
 
-      toast.dismiss("comment-tip");
+      dismissTip();
       clearHighlights();
       if (tag === "heading") {
         highlightSection(el);
