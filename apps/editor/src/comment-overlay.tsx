@@ -28,26 +28,6 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
       .catch(() => setSource(null));
   }, [mode, planFile]);
 
-  useEffect(() => {
-    if (!mode || !overlayRef.current) return;
-    const container = overlayRef.current;
-    const els = container.querySelectorAll("[data-commentable]");
-    for (const el of els) el.classList.remove("plannar-section-highlight");
-
-    const headings = container.querySelectorAll(
-      "h1[data-commentable], h2[data-commentable], h3[data-commentable], h4[data-commentable], h5[data-commentable], h6[data-commentable]",
-    );
-    for (const heading of headings) {
-      const level = parseInt(heading.tagName[1]);
-      let next: Element | null = heading.nextElementSibling;
-      while (next) {
-        if (/^H[1-6]$/.test(next.tagName) && parseInt(next.tagName[1]) <= level) break;
-        next.classList.add("plannar-section-highlight");
-        next = next.nextElementSibling;
-      }
-    }
-  }, [mode]);
-
   const handleMouseUp = useCallback(() => {
     if (!mode) return;
     const sel = window.getSelection();

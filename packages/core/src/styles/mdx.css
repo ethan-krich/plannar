@@ -291,10 +291,6 @@
   box-shadow: 0 0 0 4px oklch(0.55 0.2 260 / 0.08);
   cursor: pointer;
 }
-.mdx-content :where(.plannar-section-highlight) {
-  border-left: 3px solid oklch(0.55 0.2 260 / 0.2);
-  padding-left: 12px;
-}
 .mdx-content :where(.plannar-section-selected) {
   background: oklch(0.55 0.2 260 / 0.06);
   border-left: 3px solid oklch(0.55 0.2 260 / 0.5);
