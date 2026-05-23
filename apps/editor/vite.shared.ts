@@ -103,7 +103,7 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
         const planPath = resolvePlanPath(plansDir, planName);
 
         if (!planPath || !existsSync(planPath)) {
-          return 'export default ""';
+          return 'export const source = "";\nexport const lines = [];\nexport default source;';
         }
 
         const raw = readFileSync(planPath, "utf-8");
