@@ -11,6 +11,7 @@ const main = defineCommand({
     init: () => import("./commands/init.js").then((m) => m.default),
     editor: () => import("./commands/editor.js").then((m) => m.default),
     export: () => import("./commands/export.js").then((m) => m.default),
+    status: () => import("./commands/status.js").then((m) => m.default),
   },
 });
 
