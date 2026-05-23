@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useEffect, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { CommentAnchor } from "./comment-state.js";
 import { useCommentState } from "./comment-state.js";
 import { CommentBox } from "./comment-box.js";
@@ -35,6 +36,7 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
     const text = sel.toString().trim();
     if (!text) return;
 
+    toast.dismiss("comment-tip");
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setTarget({
@@ -55,6 +57,7 @@ export function CommentOverlay({ children, planFile }: CommentOverlayProps) {
       const tag = el.dataset.commentable || "element";
       const text = el.textContent?.replace(/\s+/g, " ").trim() || el.dataset.commentableText || "";
 
+      toast.dismiss("comment-tip");
       clearHighlights();
       if (tag === "heading") {
         highlightSection(el);
