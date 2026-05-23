@@ -97,10 +97,7 @@ Custom bindings can be registered by passing a `bindings` record to the plugin w
 ```jsx
 <Playground>
   <Slider bind="radius:12" min={0} max={64} />
-  <div
-    style={{ borderRadius: `${radius}px` }}
-    className="p-6 bg-blue-500 text-white text-center"
-  >
+  <div style={{ borderRadius: `${radius}px` }} className="p-6 bg-blue-500 text-white text-center">
     {radius}px radius
   </div>
 </Playground>
@@ -108,7 +105,7 @@ Custom bindings can be registered by passing a `bindings` record to the plugin w
 
 ### Playground rules
 
-- **Don't use shadcn components for the prototype itself.** If the plan proposes a card, write the card with HTML + Tailwind. Shadcn is for *controls* around the prototype (slider for border radius, etc.).
+- **Don't use shadcn components for the prototype itself.** If the plan proposes a card, write the card with HTML + Tailwind. Shadcn is for _controls_ around the prototype (slider for border radius, etc.).
 - **Don't wire previews to real APIs.** A "current location" mock stays mocked.
 - **Don't reuse `.plannar` shadcn components in the actual implementation** — those are plan-only.
 - **Use Tailwind** for styling unless dynamic values force inline styles.
