@@ -67,6 +67,16 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
         return `\0plannar-plan/${planMatch[1]}`;
       }
 
+      const sourceMatch = id.match(/^virtual:plannar-plan-source\/(.+)$/);
+      if (sourceMatch && isSafePlanSlug(sourceMatch[1])) {
+        return `\0plannar-plan-source/${sourceMatch[1]}`;
+      }
+
+      const sourceHttpMatch = id.match(/^\/__plannar\/plan-source\/(.+)\.js$/);
+      if (sourceHttpMatch && isSafePlanSlug(sourceHttpMatch[1])) {
+        return `\0plannar-plan-source/${sourceHttpMatch[1]}`;
+      }
+
       const httpMatch = id.match(/^\/__plannar\/plan\/(.+)\.js$/);
       if (httpMatch && isSafePlanSlug(httpMatch[1])) {
         return `\0plannar-plan/${httpMatch[1]}`;
@@ -86,6 +96,19 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
           `export const plans = ${JSON.stringify(files)};`,
           `export const plansDir = ${JSON.stringify(plansDir)};`,
         ].join("\n");
+      }
+
+      if (id.startsWith("\0plannar-plan-source/")) {
+        const planName = id.slice("\0plannar-plan-source/".length);
+        const planPath = resolvePlanPath(plansDir, planName);
+
+        if (!planPath || !existsSync(planPath)) {
+          return 'export const source = "";\nexport const lines = [];\nexport default source;';
+        }
+
+        const raw = readFileSync(planPath, "utf-8");
+        const lines = raw.split("\n");
+        return `export const source = ${JSON.stringify(raw)};\nexport const lines = ${JSON.stringify(lines)};\nexport default source;`;
       }
 
       if (!id.startsWith("\0plannar-plan/")) {
@@ -118,9 +141,11 @@ function createPlannarPlansPlugin(plansDir: string): Plugin {
       if (ctx.file.startsWith(prefix) && ctx.file.endsWith(".mdx")) {
         const slug = ctx.file.slice(prefix.length, -".mdx".length).replaceAll("\\", "/");
         const planMod = ctx.server.moduleGraph.getModuleById(`\0plannar-plan/${slug}`);
+        const sourceMod = ctx.server.moduleGraph.getModuleById(`\0plannar-plan-source/${slug}`);
 
         if (plansListMod) void ctx.server.reloadModule(plansListMod);
         if (planMod) void ctx.server.reloadModule(planMod);
+        if (sourceMod) void ctx.server.reloadModule(sourceMod);
       } else if (plansListMod) {
         void ctx.server.reloadModule(plansListMod);
       }

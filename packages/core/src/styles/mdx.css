@@ -277,3 +277,23 @@
 .mdx-content :where(h3 .icon-link:hover) {
   color: var(--mdx-heading);
 }
+
+/* Comment mode highlight styles */
+.mdx-content :where([data-commentable]) {
+  border-radius: 0.5rem;
+  transition:
+    box-shadow 0.15s,
+    outline 0.15s;
+}
+.mdx-content :where([data-commentable]:hover) {
+  outline: 2px dashed oklch(0.55 0.2 260 / 0.4);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px oklch(0.55 0.2 260 / 0.08);
+  cursor: pointer;
+}
+.mdx-content :where(.plannar-section-selected) {
+  background: oklch(0.55 0.2 260 / 0.06);
+  border-left: 3px solid oklch(0.55 0.2 260 / 0.5);
+  padding-left: 12px;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
