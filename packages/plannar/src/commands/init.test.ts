@@ -1,26 +1,16 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { describe, it, expect, vi } from "vitest";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-let cwd: string;
-
-beforeAll(() => {
-  cwd = process.cwd();
-});
-
 function useTempDir(label: string): string {
-  const dir = join(cwd, ".plannar-init-test-" + label);
-  rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
-  return dir;
+  return mkdtempSync(join(tmpdir(), `plannar-init-${label}-`));
 }
 
 describe("init command", () => {
   it("creates the expected files in .plannar/", async () => {
     const tmp = useTempDir("creates-files");
-    const originalCwd = process.cwd.bind(process);
-    // Simulate running from the temp directory
-    (process as { cwd: () => string }).cwd = () => tmp;
+    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(tmp);
 
     try {
       const { default: initCmd } = await import("./init.js");
@@ -71,7 +61,7 @@ describe("init command", () => {
       expect(mdx).toContain("plannar editor");
       expect(mdx).toContain("plannar export");
     } finally {
-      (process as { cwd: () => string }).cwd = originalCwd;
+      cwdSpy.mockRestore();
       rmSync(tmp, { recursive: true, force: true });
     }
   });
