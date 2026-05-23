@@ -41,25 +41,37 @@ function createPlanComponent(slug: string, navigate: (to: string) => void) {
   );
 }
 
+function clearCommentable(root: HTMLElement) {
+  for (const el of root.querySelectorAll("[data-commentable]")) {
+    delete (el as HTMLElement).dataset.commentable;
+    delete (el as HTMLElement).dataset.commentableText;
+  }
+}
+
 function MarkCommentable({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const { mode } = useCommentState();
 
   useEffect(() => {
     if (!ref.current || !mode) return;
-    const els = ref.current.querySelectorAll(
-      "h1, h2, h3, h4, h5, h6, figure[data-rehype-pretty-code-figure], .playground, pre",
+    clearCommentable(ref.current);
+    const headings = ref.current.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    for (const el of headings) {
+      (el as HTMLElement).dataset.commentable = "heading";
+      (el as HTMLElement).dataset.commentableText = el.textContent?.slice(0, 120) || "";
+    }
+    const codeBlocks = ref.current.querySelectorAll("figure[data-rehype-pretty-code-figure], pre");
+    for (const el of codeBlocks) {
+      (el as HTMLElement).dataset.commentable = "code";
+      (el as HTMLElement).dataset.commentableText = el.textContent?.slice(0, 120) || "";
+    }
+    const allChildren = ref.current.querySelectorAll(
+      "p, ul, ol, blockquote, table, input, textarea, button, select, label",
     );
-    for (const el of els) {
-      const tag = el.tagName.toLowerCase();
-      let text = el.textContent?.slice(0, 120) || "";
-      if (tag.startsWith("h")) {
-        (el as HTMLElement).dataset.commentable = "heading";
-        (el as HTMLElement).dataset.commentableText = text;
-      } else if (el.matches("figure[data-rehype-pretty-code-figure]") || el.tagName === "PRE") {
-        (el as HTMLElement).dataset.commentable = "code";
-        (el as HTMLElement).dataset.commentableText = text;
-      }
+    for (const el of allChildren) {
+      if ((el as HTMLElement).dataset.commentable) continue;
+      (el as HTMLElement).dataset.commentable = "block";
+      (el as HTMLElement).dataset.commentableText = el.textContent?.slice(0, 120) || "";
     }
   }, [mode, children]);
 
