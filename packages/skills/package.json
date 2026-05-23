@@ -1,0 +1,13 @@
+{
+  "name": "@plannar/skills",
+  "version": "0.0.0",
+  "description": "Markdown skills store for Plannar",
+  "license": "MIT",
+  "files": [
+    "skills"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  }
+}
