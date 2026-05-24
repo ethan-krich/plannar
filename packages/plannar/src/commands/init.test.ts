@@ -60,7 +60,7 @@ describe("init command", () => {
       expect(pkg.name).toBe("plannar");
       expect(pkg.private).toBe(true);
       expect(pkg.type).toBe("module");
-      expect(pkg.dependencies).toEqual({ clsx: "*", "tailwind-merge": "*" });
+      expect(pkg.dependencies).toEqual({ clsx: "^2.1.1", "tailwind-merge": "^3.6.0" });
 
       const tsconfig = JSON.parse(readFileSync(join(plannarDir, "tsconfig.json"), "utf-8"));
       expect(tsconfig.compilerOptions.jsx).toBe("react-jsx");

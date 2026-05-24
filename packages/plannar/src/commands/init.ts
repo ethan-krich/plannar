@@ -54,6 +54,29 @@ export function cn(...inputs: ClassValue[]) {
 }
 `;
 
+const KNOWN_VERSIONS: Record<string, string> = {
+  clsx: "^2.1.1",
+  "tailwind-merge": "^3.6.0",
+  "class-variance-authority": "^0.7.1",
+  "@base-ui/react": "^1.4.1",
+  "lucide-react": "^1.16.0",
+  "tw-animate-css": "^1.4.0",
+};
+
+function resolveVersion(pkg: string): string {
+  if (KNOWN_VERSIONS[pkg]) return KNOWN_VERSIONS[pkg];
+  try {
+    const v = execSync(`npm view ${pkg} version`, {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (v) return `^${v}`;
+  } catch {
+    // fall through
+  }
+  return "latest";
+}
+
 const samplePlan = `import { Button } from "@/components/ui/button";
 
 # Hello, Plannar!
@@ -142,7 +165,7 @@ function resolveDeps(plannarDir: string): Record<string, string> {
 
   const deps: Record<string, string> = {};
   for (const pkg of [...new Set(packages)].sort()) {
-    deps[pkg] = "*";
+    deps[pkg] = resolveVersion(pkg);
   }
   return deps;
 }
@@ -219,9 +242,14 @@ export default defineCommand({
         cwd: plannarDir,
         stdio: "inherit",
       });
-    } catch {
-      console.log("Setup failed. You can complete it manually:");
-      console.log(`  cd ${plannarDir} && npx shadcn@latest add button && npm install`);
+    } catch (err) {
+      const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+      console.error("\nSetup failed:");
+      console.error(message);
+      console.error("\nYou can complete it manually:");
+      console.error(`  cd ${plannarDir} && npx shadcn@latest add button && npm install`);
+      process.exitCode = 1;
+      return;
     }
 
     console.log("\nRun 'plannar editor' to preview your plans.");
@@ -238,9 +266,13 @@ export default defineCommand({
     console.log("\nInstalling plannar agent skill...\n");
     try {
       execSync(`npx skills add ${SKILL_SOURCE}`, { stdio: "inherit" });
-    } catch {
-      console.log("Skill installation failed. You can install it manually:");
-      console.log("  npx skills add " + SKILL_SOURCE);
+    } catch (err) {
+      const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+      console.error("\nSkill installation failed:");
+      console.error(message);
+      console.error("\nYou can install it manually:");
+      console.error("  npx skills add " + SKILL_SOURCE);
+      process.exitCode = 1;
     }
   },
 });

@@ -174,7 +174,7 @@ export default {
 };
 ```
 
-Run `plannar init` to scaffold `.plannar/` with `components.json`, `package.json`, and `plans/hello-world.mdx`.
+Run `plannar init` to scaffold `.plannar/` with `components.json`, `package.json`, `tsconfig.json`, `lib/utils.ts`, `node_modules/.plannar-junk.css`, and `plans/hello-world.mdx`. Init then runs `npx shadcn@latest add button` and `npm install` so the sample plan works immediately.
 
 ### CSS overrides
 

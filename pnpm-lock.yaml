@@ -87,9 +87,6 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -99,12 +96,6 @@ importers:
       tailwind-merge:
         specifier: 'catalog:'
         version: 3.6.0
-      tailwindcss:
-        specifier: 'catalog:'
-        version: 4.3.0
-      tw-animate-css:
-        specifier: 'catalog:'
-        version: 1.4.0
     devDependencies:
       '@types/react':
         specifier: ^19.1.0
@@ -112,9 +103,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.2.3(@types/react@19.2.14)
-      typescript:
-        specifier: ~6.0.2
-        version: 6.0.3
 
   apps/editor:
     dependencies:
