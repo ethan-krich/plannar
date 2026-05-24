@@ -17,7 +17,7 @@ export type PlannarConfig = {
 const DEFAULTS: PlannarConfig = {
   plannarFolder: ".plannar",
   exportsFolder: ".plannar/exports",
-  globalCss: ".plannar/globals.css",
+  globalCss: ".plannar/index.css",
 };
 
 function applyDerivedDefaults(
@@ -32,7 +32,7 @@ function applyDerivedDefaults(
   }
 
   if (!overrides.globalCss) {
-    config.globalCss = `${config.plannarFolder}/globals.css`;
+    config.globalCss = `${config.plannarFolder}/index.css`;
   }
 
   return config;
