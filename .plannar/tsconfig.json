@@ -1,0 +1,9 @@
+{
+  "extends": "../apps/editor/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
