@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -60,11 +60,7 @@ describe("init command", () => {
       expect(pkg.name).toBe("plannar");
       expect(pkg.private).toBe(true);
       expect(pkg.type).toBe("module");
-      expect(pkg.dependencies).toBeDefined();
-      expect(pkg.dependencies["@base-ui/react"]).toBeDefined();
-      expect(pkg.dependencies["class-variance-authority"]).toBeDefined();
-      expect(pkg.dependencies.clsx).toBeDefined();
-      expect(pkg.dependencies["tailwind-merge"]).toBeDefined();
+      expect(pkg.dependencies).toEqual({ clsx: "*", "tailwind-merge": "*" });
 
       const tsconfig = JSON.parse(readFileSync(join(plannarDir, "tsconfig.json"), "utf-8"));
       expect(tsconfig.compilerOptions.jsx).toBe("react-jsx");
@@ -174,6 +170,64 @@ describe("init command", () => {
         value: originalIsTTY,
         configurable: true,
       });
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("detects external imports from shadcn component files", async () => {
+    const tmp = useTempDir("detect-imports");
+    mkdirSync(join(tmp, ".plannar", "components", "ui"), { recursive: true });
+    mkdirSync(join(tmp, ".plannar", "lib"), { recursive: true });
+
+    writeFileSync(
+      join(tmp, ".plannar", "lib", "utils.ts"),
+      `import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}`,
+      "utf-8",
+    );
+
+    writeFileSync(
+      join(tmp, ".plannar", "components", "ui", "button.tsx"),
+      `import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+export function Button(props: ButtonPrimitive.Props) {
+  return <ButtonPrimitive className={cn("rounded")} {...props} />;
+}`,
+      "utf-8",
+    );
+
+    writeFileSync(
+      join(tmp, ".plannar", "components", "ui", "icon.tsx"),
+      `import { Star } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function Icon() {
+  return <Star className={cn("size-4")} />;
+}`,
+      "utf-8",
+    );
+
+    try {
+      const { collectExternalImports } = await import("./init.js");
+      const plannarDir = join(tmp, ".plannar");
+      const imports = collectExternalImports(plannarDir);
+
+      expect(imports.sort()).toEqual(
+        [
+          "@base-ui/react",
+          "class-variance-authority",
+          "clsx",
+          "lucide-react",
+          "tailwind-merge",
+        ].sort(),
+      );
+    } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
   });

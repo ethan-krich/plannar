@@ -123,7 +123,7 @@ Scaffolds `.plannar/`:
 - `node_modules/.plannar-junk.css` — dummy CSS target for shadcn, cleaned up on every CLI action
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
 
-After scaffolding, runs `npx shadcn@latest add button` so the sample plan works immediately. Then prompts to install the plannar agent skill.
+After scaffolding, runs `npx shadcn@latest add button`, scans generated files for external imports, writes them to `package.json` dependencies, and runs `npm install` so the sample plan works immediately. Then prompts to install the plannar agent skill.
 
 Config is not scaffolded into `.plannar/`. Users who need custom config create a `plannar.config.{js,ts,json}` at their project root (see Configuration below).
 

@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { defineCommand } from "citty";
@@ -34,12 +34,6 @@ const packageJson = {
   name: "plannar",
   private: true,
   type: "module",
-  dependencies: {
-    "@base-ui/react": "^1.4.1",
-    "class-variance-authority": "^0.7.1",
-    clsx: "^2.1.1",
-    "tailwind-merge": "^3.6.0",
-  },
 };
 
 const tsconfigJson = {
@@ -101,6 +95,56 @@ function ask(prompt: string): Promise<string> {
       resolve(answer.trim());
     });
   });
+}
+
+function walkDir(dir: string, files: string[] = []): string[] {
+  if (!existsSync(dir)) return files;
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      walkDir(full, files);
+    } else if (entry.endsWith(".ts") || entry.endsWith(".tsx")) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+export function collectExternalImports(plannarDir: string): string[] {
+  const deps = new Set<string>();
+  const files = [...walkDir(join(plannarDir, "components")), ...walkDir(join(plannarDir, "lib"))];
+
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    const importRe = /import\s+(?:[^'"]*\s+from\s+)?['"]([^'"]+)['"]/g;
+    let match: RegExpExecArray | null;
+    while ((match = importRe.exec(content)) !== null) {
+      const spec = match[1];
+      if (spec.startsWith("@/") || spec.startsWith(".")) continue;
+      const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+      deps.add(pkg);
+    }
+  }
+
+  return [...deps];
+}
+
+function resolveDeps(plannarDir: string): Record<string, string> {
+  const packages = collectExternalImports(plannarDir);
+
+  const existingPkgPath = join(plannarDir, "package.json");
+  if (existsSync(existingPkgPath)) {
+    const existing = JSON.parse(readFileSync(existingPkgPath, "utf-8"));
+    for (const key of Object.keys(existing.dependencies ?? {})) {
+      packages.push(key);
+    }
+  }
+
+  const deps: Record<string, string> = {};
+  for (const pkg of [...new Set(packages)].sort()) {
+    deps[pkg] = "*";
+  }
+  return deps;
 }
 
 const SKILL_SOURCE = "ethan-krich/plannar@plannar";
@@ -165,6 +209,11 @@ export default defineCommand({
         cwd: plannarDir,
         stdio: "inherit",
       });
+
+      const deps = resolveDeps(plannarDir);
+      const pkg = { ...packageJson, dependencies: deps };
+      writeFileSync(join(plannarDir, "package.json"), JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+
       console.log("\nInstalling dependencies...\n");
       execSync("npm install", {
         cwd: plannarDir,
