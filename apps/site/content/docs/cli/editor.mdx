@@ -1,0 +1,43 @@
+---
+title: plannar editor
+description: Start the plan preview dev server with HMR.
+---
+
+Starts a Vite-powered dev server to preview plans.
+
+## Usage
+
+```sh
+plannar editor
+```
+
+## Flags
+
+| Flag     | Type     | Default     | Description         |
+| -------- | -------- | ----------- | ------------------- |
+| `--port` | `number` | `5173`      | Port for dev server |
+| `--host` | `string` | `localhost` | Host to bind to     |
+
+## Behavior
+
+- Resolves project config (local > global > defaults)
+- HMR on every `.mdx` file save
+- Auto-detects new `.mdx` files
+- Deep-merges `viteConfig.editor` overrides from JS/TS configs
+
+## What you see
+
+- Left: file browser listing all `.mdx` plans
+- Main: rendered plan with live Playgrounds
+- Bottom: comment mode toggle
+- System light/dark mode
+
+## Custom Vite config
+
+```ts
+export default {
+  viteConfig: {
+    editor: { server: { port: 3000 } },
+  },
+};
+```

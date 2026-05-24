@@ -1,0 +1,54 @@
+---
+title: Configuration
+description: Config field reference, merge order, and examples.
+---
+
+Plannar resolves configuration merged **local > global > defaults**. Both sources are optional.
+
+## Config files
+
+| Source | Path                                            |
+| ------ | ----------------------------------------------- |
+| Global | `~/.config/plannar/plannar.config.{js,ts,json}` |
+| Local  | `./plannar.config.{js,ts,json}` (CWD)           |
+
+JS/TS configs load via `jiti`. JSON is parsed directly.
+
+## Fields
+
+| Field           | Type      | Default                  | Description                                     |
+| --------------- | --------- | ------------------------ | ----------------------------------------------- |
+| `plannarFolder` | `string`  | `".plannar"`             | Root folder for plans, components, config       |
+| `exportsFolder` | `string`  | `".plannar/exports"`     | Output directory for exported HTML              |
+| `globalCss`     | `string?` | `".plannar/globals.css"` | CSS that overrides built-in styles              |
+| `cssFilePath`   | `string?` | _none_                   | Additional CSS loaded after `globalCss`         |
+| `viteConfig`    | `object?` | _none_                   | Vite overrides: `{ editor?: {}, exports?: {} }` |
+
+## Derived defaults
+
+`exportsFolder` and `globalCss` derive from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `globalCss` becomes `.my-plans/globals.css`.
+
+## Examples
+
+**JSON:**
+
+```json
+{
+  "plannarFolder": ".plannar",
+  "cssFilePath": ".plannar/custom-dark.css"
+}
+```
+
+**TS with Vite overrides:**
+
+```ts
+import type { PlannarConfig } from "plannar";
+
+const config: PlannarConfig = {
+  viteConfig: {
+    editor: { server: { port: 3000 } },
+  },
+};
+
+export default config;
+```

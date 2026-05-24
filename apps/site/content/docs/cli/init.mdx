@@ -1,0 +1,45 @@
+---
+title: plannar init
+description: Scaffold .plannar/ with shadcn/ui components, sample plans, and config.
+---
+
+Scaffolds `.plannar/` in the current directory.
+
+## Usage
+
+```sh
+npx plannar init
+```
+
+## What it creates
+
+| File                    | Purpose                         |
+| ----------------------- | ------------------------------- |
+| `config.json`           | Project-level plannar config    |
+| `components.json`       | shadcn/ui configuration         |
+| `globals.css`           | Override built-in styles        |
+| `plans/hello-world.mdx` | Sample plan with state binding  |
+| `components/ui/*`       | Pre-installed shadcn components |
+| `index.css`             | Tailwind v4 + theme tokens      |
+
+## After init
+
+```sh
+plannar editor    # Start preview server
+plannar status    # Check if running
+plannar export    # Export as HTML
+```
+
+## Config
+
+The scaffolded `.plannar/config.json`:
+
+```json
+{
+  "plannarFolder": ".plannar",
+  "exportsFolder": ".plannar/exports",
+  "globalCss": ".plannar/globals.css"
+}
+```
+
+Override these or add `cssFilePath` and `viteConfig` as needed.

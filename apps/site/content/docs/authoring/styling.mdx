@@ -1,0 +1,66 @@
+---
+title: Styling
+description: Tailwind v4, theme tokens, and CSS overrides in Plannar plans.
+---
+
+Plannar uses Tailwind v4 for styling. Plans inherit theme tokens from the editor.
+
+## Built-in styles
+
+| File        | Scope          | Contents                               |
+| ----------- | -------------- | -------------------------------------- |
+| `theme.css` | Global         | shadcn tokens, fonts, reset, dark mode |
+| `mdx.css`   | `.mdx-content` | Headings, code, tables, blockquotes    |
+
+`mdx.css` uses `:where()` for zero specificity — any Tailwind class wins.
+
+## Tailwind in plans
+
+Use Tailwind classes directly in MDX:
+
+```jsx
+<div className="flex gap-4 p-6 bg-card text-card-foreground rounded-lg">
+  <span className="text-sm font-medium">Hello</span>
+</div>
+```
+
+For dynamic styles driven by bind state, use inline `style`:
+
+```jsx
+<div style={{ borderRadius: `${radius}px` }} className="p-6 bg-primary text-primary-foreground">
+  {radius}px
+</div>
+```
+
+## Theme tokens
+
+Key tokens you will reference in Tailwind classes:
+
+| Token          | Light          | Dark           |
+| -------------- | -------------- | -------------- |
+| `--background` | white          | near-black     |
+| `--foreground` | near-black     | white          |
+| `--primary`    | near-black     | white          |
+| `--muted`      | `oklch(0.97)`  | `oklch(0.269)` |
+| `--border`     | `oklch(0.922)` | `oklch(0.269)` |
+| `--radius`     | `0.625rem`     | same           |
+
+Class names use the token name without `--`: `bg-background`, `text-foreground`, `border-border`.
+
+## CSS overrides
+
+Customize via `.plannar/globals.css` (loads after built-in styles):
+
+```css
+:root {
+  --primary: oklch(0.55 0.2 250);
+  --radius: 0.5rem;
+}
+.dark {
+  --primary: oklch(0.55 0.2 250);
+}
+```
+
+### Load order
+
+1. `mdx.css` → `theme.css` → `globalCss` → `cssFilePath`

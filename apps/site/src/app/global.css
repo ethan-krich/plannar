@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "react-shiki/css";
+
+/*
+ * Direction B — Refined Technical, expressed in system color tokens.
+ * Fumadocs's neutral preset already gives us the right canvas (near-black
+ * background in dark mode, near-white in light). We override --primary so the
+ * accent reads like B's acid-lime against neutrals in both modes.
+ *
+ * The accent is the SAME value in light + dark; only the canvas swaps.
+ */
+:root {
+  --color-fd-primary: oklch(0.84 0.21 122);
+}
+.dark {
+  --color-fd-primary: oklch(0.84 0.21 122);
+}
+
+/* Hairline rule used as a section marker across the landing. */
+.plannar-hairline {
+  height: 1px;
+  background: var(--color-fd-border);
+}

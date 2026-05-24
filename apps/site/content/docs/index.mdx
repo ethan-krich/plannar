@@ -1,0 +1,27 @@
+---
+title: Introduction
+description: Plannar turns agent-written plans into interactive MDX documents.
+---
+
+Plannar turns agent-written plans into interactive MDX documents — tabs instead of walls of text, live previews instead of mockups. Agents write plans as `.mdx` files in `.plannar/plans/`. Reviewers see a skimmable, interactive document instead of a wall of markdown.
+
+## Why Plannar exists
+
+Agent-generated plans tend to be long. Really long. Plannar gives agents the tools to write **structured, skimmable plans** using shadcn/ui components — Tabs for alternatives, Accordions for detail, Cards for summaries, and Playgrounds for live interactive previews.
+
+The output is still markdown (MDX), so it's token-efficient for the agent to write and cheap to edit across re-runs. But it compiles to a rich interactive page.
+
+## Who it's for
+
+- **Agent users** who get plans from coding agents and want them skimmable instead of scrollable.
+- **Reviewers** who need to leave feedback — Plannar collects inline comments and generates prompts for your agent.
+- **Teams** that share plans as artifacts — export to a single HTML file and attach to a ticket.
+
+## Quick start
+
+```sh
+npx plannar init
+plannar editor
+```
+
+Open your browser and you will see the first plan live.
