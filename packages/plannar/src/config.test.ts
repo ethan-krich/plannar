@@ -7,7 +7,7 @@ import { generateMdx } from "@plannar/core";
 import { shadcnBindings } from "@plannar/registry-metadata";
 
 describe("resolveConfig", () => {
-  it("derives exportsFolder and globalCss from an overridden plannarFolder", async () => {
+  it("derives exportsFolder from an overridden plannarFolder", async () => {
     const cwd = mkdtempSync(join(tmpdir(), "plannar-config-test-"));
 
     try {
@@ -21,7 +21,7 @@ describe("resolveConfig", () => {
 
       expect(config.plannarFolder).toBe(".custom-plannar");
       expect(config.exportsFolder).toBe(".custom-plannar/exports");
-      expect(config.globalCss).toBe(".custom-plannar/index.css");
+      expect(config.globalCss).toBeUndefined();
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }

@@ -18,14 +18,17 @@ npx plannar init
 
 This creates `.plannar/` in your current directory:
 
-| File                    | Purpose                               |
-| ----------------------- | ------------------------------------- |
-| `config.json`           | Project-level plannar config          |
-| `components.json`       | shadcn/ui configuration (Tailwind v4) |
-| `globals.css`           | Override built-in styles              |
-| `plans/hello-world.mdx` | Sample plan with state binding        |
-| `components/ui/*`       | Pre-installed shadcn components       |
-| `index.css`             | Tailwind v4 + theme tokens            |
+| File                             | Purpose                                       |
+| -------------------------------- | --------------------------------------------- |
+| `components.json`                | shadcn/ui configuration (Tailwind v4)         |
+| `package.json`                   | npm package (enables `npx shadcn add`)        |
+| `tsconfig.json`                  | TypeScript config with `@/*` alias            |
+| `lib/utils.ts`                   | `cn` utility (clsx + tailwind-merge)          |
+| `node_modules/.plannar-junk.css` | Dummy CSS target so shadcn's CLI is satisfied |
+| `plans/hello-world.mdx`          | Sample plan with state binding                |
+| `components/ui/button.tsx`       | Pre-installed Button component                |
+
+Init runs `npx shadcn@latest add button` and then `npm install` so the sample plan works immediately. The `node_modules/.plannar-junk.css` file is why `components.json` points `tailwind.css` into `node_modules/` — Plannar manages styling itself, but shadcn's CLI requires a CSS target to exist. Config is not scaffolded — create a `plannar.config.{js,ts,json}` at your project root to customize.
 
 ## Adding components
 

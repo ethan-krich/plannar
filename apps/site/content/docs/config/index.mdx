@@ -16,17 +16,17 @@ JS/TS configs load via `jiti`. JSON is parsed directly.
 
 ## Fields
 
-| Field           | Type      | Default                  | Description                                     |
-| --------------- | --------- | ------------------------ | ----------------------------------------------- |
-| `plannarFolder` | `string`  | `".plannar"`             | Root folder for plans, components, config       |
-| `exportsFolder` | `string`  | `".plannar/exports"`     | Output directory for exported HTML              |
-| `globalCss`     | `string?` | `".plannar/globals.css"` | CSS that overrides built-in styles              |
-| `cssFilePath`   | `string?` | _none_                   | Additional CSS loaded after `globalCss`         |
-| `viteConfig`    | `object?` | _none_                   | Vite overrides: `{ editor?: {}, exports?: {} }` |
+| Field           | Type      | Default              | Description                                     |
+| --------------- | --------- | -------------------- | ----------------------------------------------- |
+| `plannarFolder` | `string`  | `".plannar"`         | Root folder for plans, components, config       |
+| `exportsFolder` | `string`  | `".plannar/exports"` | Output directory for exported HTML              |
+| `globalCss`     | `string?` | _none_               | CSS that overrides built-in styles              |
+| `cssFilePath`   | `string?` | _none_               | Additional CSS loaded after `globalCss`         |
+| `viteConfig`    | `object?` | _none_               | Vite overrides: `{ editor?: {}, exports?: {} }` |
 
 ## Derived defaults
 
-`exportsFolder` and `globalCss` derive from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `globalCss` becomes `.my-plans/globals.css`.
+`exportsFolder` derives from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `exportsFolder` becomes `.my-plans/exports`.
 
 ## Examples
 
@@ -35,7 +35,7 @@ JS/TS configs load via `jiti`. JSON is parsed directly.
 ```json
 {
   "plannarFolder": ".plannar",
-  "cssFilePath": ".plannar/custom-dark.css"
+  "globalCss": ".plannar/theme-overrides.css"
 }
 ```
 

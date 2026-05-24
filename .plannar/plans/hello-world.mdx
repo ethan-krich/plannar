@@ -2,23 +2,21 @@ import { Button } from "@/components/ui/button";
 
 # Hello, Plannar!
 
-Plans are interactive MDX documents. Anything that's a `<Playground>` becomes live React, with two-way state binding via a single `bind=` prop — no hooks to wire up.
+Welcome to your first plan. Plans are interactive MDX documents with
+live components powered by shadcn/ui.
 
-## State binding in 6 lines
+## Try It
 
-Drag the range, watch the box change. No `useState`, no handlers — `bind="radius:12"` does both.
+Type something below and watch it update in real time:
 
 <Playground>
-  <input type="range" min="0" max="48" bind="radius:12" className="w-full" />
-  <div
-    className="grid h-24 place-items-center bg-primary text-primary-foreground transition-[border-radius]"
-    style={{ borderRadius: `${radius}px` }}
-  >
-    {radius}px
-  </div>
+  <input
+    bind="text:'Hello world'"
+    placeholder="Type something..."
+    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
+  />
+  <p>You typed: {text}</p>
 </Playground>
-
-The same pattern works for any registered control — `<Slider>`, `<Tabs>`, `<Switch>`, `<Dialog>`, plain `<input>`/`<textarea>`/`<select>`, and so on. Unregistered elements (like `<Button>` below) still get a `setX` setter you wire yourself:
 
 <Playground>
   <Button bind="count:0" onClick={() => setCount(count + 1)} variant="outline">
@@ -26,29 +24,8 @@ The same pattern works for any registered control — `<Slider>`, `<Tabs>`, `<Sw
   </Button>
 </Playground>
 
-## What else Plannar gives you
+## Next Steps
 
-### Inline comments
-
-Hit the **comment** button in the bottom-right of the editor, then highlight any text or click any heading / Playground. Your notes are anchored to the source, and the editor generates an LLM-ready prompt you can paste back to the agent. No Google Doc round-trip.
-
-### Self-contained exports
-
-Run `plannar export hello-world` to package this plan as a single HTML file — Playgrounds, state, styles and all. Email it, attach it to a ticket, drop it in Slack; no server required.
-
-### Real components, not screenshots
-
-Plannar is wired up to shadcn/ui. Add whatever you need:
-
-```sh
-npx shadcn@latest add card tabs accordion slider
-```
-
-Then import them with the `@/components/ui/...` alias and use them directly in Playgrounds. The same primitives you'd reach for in production work in a plan — so "mockups" and the eventual implementation look 1:1.
-
-## Next
-
-- Drop more `.mdx` files into `.plannar/plans/`
-- Run `plannar editor` to preview (HMR works on file changes _and_ adds)
-- Run `plannar export <name>` to ship a plan as standalone HTML
-- Browse the docs for the full Playground / `bind=` reference
+- Create more plans in `.plannar/plans/`
+- Run `plannar editor` to preview them
+- Run `plannar export <name>` to export as HTML
