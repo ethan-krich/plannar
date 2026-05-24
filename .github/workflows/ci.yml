@@ -15,11 +15,8 @@ jobs:
         with:
           node-version: "24"
           cache: true
-      # @plannar/core must be built before any vp command can load the root
-      # vite.config.ts, which imports from it via apps/editor/vite.shared.ts.
+      # postinstall packs @plannar/core (required so the root vite.config.ts
+      # can be loaded) and builds the remaining packages.
       - run: vp install
-      - run: vp pack
-        working-directory: packages/core
-      - run: vp run -r build
       - run: vp check
       - run: vp run -r test

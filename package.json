@@ -7,7 +7,7 @@
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev": "vp run editor#dev",
     "prepare": "vp config",
-    "postinstall": "vp run -r build"
+    "postinstall": "cd packages/core && vp pack && cd ../.. && vp run --filter '!@plannar/core' build"
   },
   "devDependencies": {
     "@plannar/core": "workspace:*",
