@@ -18,13 +18,15 @@ npx plannar init
 
 This creates `.plannar/` in your current directory:
 
-| File                    | Purpose                                |
-| ----------------------- | -------------------------------------- |
-| `components.json`       | shadcn/ui configuration (Tailwind v4)  |
-| `package.json`          | npm package (enables `npx shadcn add`) |
-| `plans/hello-world.mdx` | Sample plan with state binding         |
+| File                       | Purpose                                |
+| -------------------------- | -------------------------------------- |
+| `components.json`          | shadcn/ui configuration (Tailwind v4)  |
+| `package.json`             | npm package (enables `npx shadcn add`) |
+| `tsconfig.json`            | TypeScript config with `@/*` alias     |
+| `plans/hello-world.mdx`    | Sample plan with state binding         |
+| `components/ui/button.tsx` | Pre-installed Button component         |
 
-Config is not scaffolded. Create a `plannar.config.{js,ts,json}` at your project root to customize.
+Init runs `npx shadcn@latest add button` so the sample plan works immediately. Config is not scaffolded — create a `plannar.config.{js,ts,json}` at your project root to customize.
 
 ## Adding components
 

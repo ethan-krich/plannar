@@ -36,6 +36,16 @@ const packageJson = {
   type: "module",
 };
 
+const tsconfigJson = {
+  compilerOptions: {
+    jsx: "react-jsx",
+    baseUrl: ".",
+    paths: {
+      "@/*": ["./*"],
+    },
+  },
+};
+
 const samplePlan = `import { Button } from "@/components/ui/button";
 
 # Hello, Plannar!
@@ -108,6 +118,12 @@ export default defineCommand({
     );
 
     writeFileSync(
+      join(plannarDir, "tsconfig.json"),
+      JSON.stringify(tsconfigJson, null, 2) + "\n",
+      "utf-8",
+    );
+
+    writeFileSync(
       join(nodeModulesDir, ".plannar-junk.css"),
       "/* plannar — styles are managed by the editor, not shadcn */\n",
       "utf-8",
@@ -118,10 +134,23 @@ export default defineCommand({
     console.log("✓ Initialized .plannar/");
     console.log("  └── components.json      (shadcn/ui registry)");
     console.log("  └── package.json         (npm package)");
+    console.log("  └── tsconfig.json        (TypeScript config)");
     console.log("  └── node_modules/");
     console.log("       └── .plannar-junk.css");
     console.log("  └── plans/");
     console.log("       └── hello-world.mdx");
+    console.log("\nInstalling shadcn/ui components...\n");
+
+    try {
+      execSync("npx shadcn@latest add button", {
+        cwd: plannarDir,
+        stdio: "inherit",
+      });
+    } catch {
+      console.log("shadcn add failed. You can add components manually:");
+      console.log(`  cd ${plannarDir} && npx shadcn@latest add button`);
+    }
+
     console.log("\nRun 'plannar editor' to preview your plans.");
 
     if (!process.stdin.isTTY) return;

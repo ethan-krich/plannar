@@ -17,10 +17,12 @@ npx plannar init
 | -------------------------------- | -------------------------------------- |
 | `components.json`                | shadcn/ui configuration                |
 | `package.json`                   | npm package (enables `npx shadcn add`) |
+| `tsconfig.json`                  | TypeScript config with `@/*` alias     |
 | `node_modules/.plannar-junk.css` | Dummy CSS target for shadcn            |
 | `plans/hello-world.mdx`          | Sample plan with state binding         |
+| `components/ui/button.tsx`       | Pre-installed Button component         |
 
-Config is not scaffolded into `.plannar/`. To customize, create a `plannar.config.{js,ts,json}` at your project root.
+After scaffolding, runs `npx shadcn@latest add button` so the sample plan works immediately. Config is not scaffolded — create `plannar.config.{js,ts,json}` at your project root to customize.
 
 ## After init
 

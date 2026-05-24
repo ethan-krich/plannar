@@ -118,8 +118,11 @@ Scaffolds `.plannar/`:
 
 - `components.json` — shadcn/ui config (style `base-nova`, Tailwind v4, CSS target points to a junk file in `node_modules/`)
 - `package.json` — npm package (enables `npx shadcn add`)
+- `tsconfig.json` — TypeScript config with `@/*` path alias
 - `node_modules/.plannar-junk.css` — dummy CSS target for shadcn, cleaned up on every CLI action
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
+
+After scaffolding, runs `npx shadcn@latest add button` so the sample plan works immediately. Then prompts to install the plannar agent skill.
 
 Config is not scaffolded into `.plannar/`. Users who need custom config create a `plannar.config.{js,ts,json}` at their project root (see Configuration below).
 

@@ -47,18 +47,23 @@ describe("init command", () => {
 
       expect(existsSync(join(plannarDir, "components.json"))).toBe(true);
       expect(existsSync(join(plannarDir, "package.json"))).toBe(true);
+      expect(existsSync(join(plannarDir, "tsconfig.json"))).toBe(true);
       expect(existsSync(join(plannarDir, "plans", "hello-world.mdx"))).toBe(true);
       expect(existsSync(join(plannarDir, "node_modules", ".plannar-junk.css"))).toBe(true);
 
       // No longer created by init
       expect(existsSync(join(plannarDir, "config.json"))).toBe(false);
       expect(existsSync(join(plannarDir, "index.css"))).toBe(false);
-      expect(existsSync(join(plannarDir, "tsconfig.json"))).toBe(false);
 
       const pkg = JSON.parse(readFileSync(join(plannarDir, "package.json"), "utf-8"));
       expect(pkg.name).toBe("plannar");
       expect(pkg.private).toBe(true);
       expect(pkg.type).toBe("module");
+
+      const tsconfig = JSON.parse(readFileSync(join(plannarDir, "tsconfig.json"), "utf-8"));
+      expect(tsconfig.compilerOptions.jsx).toBe("react-jsx");
+      expect(tsconfig.compilerOptions.baseUrl).toBe(".");
+      expect(tsconfig.compilerOptions.paths).toEqual({ "@/*": ["./*"] });
 
       const components = JSON.parse(readFileSync(join(plannarDir, "components.json"), "utf-8"));
       expect(components.tailwind.css).toBe("node_modules/.plannar-junk.css");
@@ -71,7 +76,7 @@ describe("init command", () => {
       expect(mdx).toContain("plannar editor");
       expect(mdx).toContain("plannar export");
 
-      expect(execSpy).not.toHaveBeenCalled();
+      expect(execSpy).toHaveBeenCalledWith("npx shadcn@latest add button", expect.any(Object));
     } finally {
       cwdSpy.mockRestore();
       rmSync(tmp, { recursive: true, force: true });
@@ -86,7 +91,8 @@ describe("init command", () => {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
-      expect(execSpy).not.toHaveBeenCalled();
+      expect(execSpy).toHaveBeenCalledTimes(1);
+      expect(execSpy).toHaveBeenCalledWith("npx shadcn@latest add button", expect.any(Object));
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -105,7 +111,13 @@ describe("init command", () => {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
-      expect(execSpy).toHaveBeenCalledWith("npx skills add ethan-krich/plannar@plannar", {
+      expect(execSpy).toHaveBeenCalledTimes(2);
+      expect(execSpy).toHaveBeenNthCalledWith(
+        1,
+        "npx shadcn@latest add button",
+        expect.any(Object),
+      );
+      expect(execSpy).toHaveBeenNthCalledWith(2, "npx skills add ethan-krich/plannar@plannar", {
         stdio: "inherit",
       });
     } finally {
@@ -130,7 +142,8 @@ describe("init command", () => {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
-      expect(execSpy).not.toHaveBeenCalled();
+      expect(execSpy).toHaveBeenCalledTimes(1);
+      expect(execSpy).toHaveBeenCalledWith("npx shadcn@latest add button", expect.any(Object));
     } finally {
       Object.defineProperty(process.stdin, "isTTY", {
         value: originalIsTTY,
