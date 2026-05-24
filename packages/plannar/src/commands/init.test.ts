@@ -111,7 +111,7 @@ describe("init command", () => {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
-      expect(execSpy).toHaveBeenCalledWith("npx skills add ethan-krich/plannar@plannar -g -y", {
+      expect(execSpy).toHaveBeenCalledWith("npx skills add ethan-krich/plannar@plannar", {
         stdio: "inherit",
       });
     } finally {

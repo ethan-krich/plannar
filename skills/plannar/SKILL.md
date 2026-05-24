@@ -123,7 +123,7 @@ Scaffolds `.plannar/`:
 - `tsconfig.json` — TypeScript config with `@/*` path alias
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
 
-After scaffolding, prompts to install the plannar agent skill via `npx skills add ethan-krich/plannar@plannar -g -y`. The prompt is skipped when stdin is not a TTY (e.g. CI).
+After scaffolding, prompts to install the plannar agent skill via `npx skills add ethan-krich/plannar@plannar` (project-level, interactive agent selection). The prompt is skipped when stdin is not a TTY (e.g. CI).
 
 ### `plannar editor`
 

@@ -275,16 +275,16 @@ export default defineCommand({
     const answer = await ask(`\nInstall the plannar agent skill? (${SKILL_SOURCE}) [Y/n] `);
 
     if (answer && answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
-      console.log("Skipped skill installation. Run: npx skills add " + SKILL_SOURCE + " -g -y");
+      console.log("Skipped skill installation. Run: npx skills add " + SKILL_SOURCE);
       return;
     }
 
     console.log("\nInstalling plannar agent skill...\n");
     try {
-      execSync(`npx skills add ${SKILL_SOURCE} -g -y`, { stdio: "inherit" });
+      execSync(`npx skills add ${SKILL_SOURCE}`, { stdio: "inherit" });
     } catch {
       console.log("Skill installation failed. You can install it manually:");
-      console.log("  npx skills add " + SKILL_SOURCE + " -g -y");
+      console.log("  npx skills add " + SKILL_SOURCE);
     }
   },
 });
