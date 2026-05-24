@@ -1,0 +1,33 @@
+{
+  "name": "@plannar/site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "fumadocs-mdx"
+  },
+  "dependencies": {
+    "@plannar/core": "workspace:*",
+    "@plannar/registry-metadata": "workspace:*",
+    "fumadocs-core": "^15.5.0",
+    "fumadocs-mdx": "^11.6.0",
+    "fumadocs-ui": "^15.5.0",
+    "next": "^15.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-shiki": "catalog:",
+    "shiki": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.6",
+    "@types/node": "catalog:",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

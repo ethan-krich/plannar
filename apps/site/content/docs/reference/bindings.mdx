@@ -1,0 +1,62 @@
+---
+title: Bind directives
+description: Complete reference for bind= registered elements and custom binding registration.
+---
+
+The `bind="name:initial"` prop, when used inside a `<Playground>`, is replaced at compile time with generated React state hooks and auto-wired value/change props.
+
+## Registered binding table
+
+| Element                                                                   | Library | State type | `valueProp` | `changeProp`      | Extract                  | Inject |
+| ------------------------------------------------------------------------- | ------- | ---------- | ----------- | ----------------- | ------------------------ | ------ |
+| `<input>` / `<textarea>`                                                  | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         | —      |
+| `<input type="checkbox">`                                                 | HTML    | `boolean`  | `checked`   | `onChange`        | `e.target.checked`       | —      |
+| `<input type="number">`                                                   | HTML    | `number`   | `value`     | `onChange`        | `e.target.valueAsNumber` | —      |
+| `<select>`                                                                | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         | —      |
+| `Checkbox` / `Switch`                                                     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` | `e`                      | —      |
+| `Slider`                                                                  | shadcn  | `number`   | `value`     | `onValueChange`   | `e[0]`                   | `[v]`  |
+| `Select` / `Tabs` / `Accordion` / `RadioGroup`                            | shadcn  | `string`   | `value`     | `onValueChange`   | `e`                      | —      |
+| `Dialog` / `AlertDialog` / `Sheet` / `Drawer` / `Popover` / `Collapsible` | shadcn  | `boolean`  | `open`      | `onOpenChange`    | `e`                      | —      |
+| `HoverCard` / `Tooltip` / `DropdownMenu` / `ContextMenu`                  | shadcn  | `boolean`  | `open`      | `onOpenChange`    | `e`                      | —      |
+| `Toggle`                                                                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` | `e`                      | —      |
+
+`Slider` is a special case: the component prop expects `number[]`, but the
+authored state variable is a single `number`. `extract: "e[0]"` unwraps the
+array on change, and `inject: "[v]"` re-wraps the value when passing it back
+into `value=`. So you write `${radius}px` against a plain number.
+
+## Lookup order
+
+1. `name:type` — e.g. `<input type="checkbox">` → `input:checkbox`
+2. `name` — e.g. `<Slider>` → `slider`
+
+## BindingMeta type
+
+```ts
+interface BindingMeta {
+  valueProp: string; // e.g. "value", "checked"
+  changeProp: string; // e.g. "onChange", "onValueChange"
+  extract: string; // e.g. "e.target.value", "e[0]"
+  inject?: string; // optional transform, "v" holds the value
+}
+```
+
+## Custom binding registration
+
+```ts
+import { remarkStateBind } from "@plannar/core";
+
+const custom = {
+  "my-slider": {
+    valueProp: "value",
+    changeProp: "onSlide",
+    extract: "e.detail.value",
+  },
+};
+
+remarkStateBind({ bindings: custom });
+```
+
+## Duplicate names
+
+Duplicate `bind` names within the same `<Playground>` produce a compile error. Different Playgrounds have independent scopes.

@@ -1,0 +1,37 @@
+---
+title: Your first plan
+description: Walk through the sample plan and understand how Plannar works.
+---
+
+After `plannar init`, open `.plannar/plans/hello-world.mdx`.
+
+## Open the editor
+
+```sh
+plannar editor
+```
+
+Starts a dev server (default `http://localhost:5173`) with HMR.
+
+## State binding
+
+The plan demonstrates `bind=` on any element auto-wires React state. No `useState`, no `onChange` handlers:
+
+```jsx
+<Playground>
+  <input type="range" min="0" max="48" bind="radius:12" className="w-full" />
+  <div style={{ borderRadius: `${radius}px` }}>{radius}px</div>
+</Playground>
+```
+
+## Component bindings
+
+For registered components (Slider, Checkbox, Switch), binding is automatic. For unregistered ones (Button), you get a `setX` setter:
+
+```jsx
+<Playground>
+  <Button bind="count:0" onClick={() => setCount(count + 1)}>
+    Clicked {count} times
+  </Button>
+</Playground>
+```

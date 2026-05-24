@@ -1,0 +1,48 @@
+---
+title: Components
+description: shadcn/ui components available in Plannar — what is pre-installed and how to add more.
+---
+
+Plannar ships with shadcn/ui pre-installed in `.plannar/components/ui/`.
+
+## Pre-installed
+
+| Component   | Purpose                                  |
+| ----------- | ---------------------------------------- |
+| `Accordion` | Collapsible sections for optional detail |
+| `Badge`     | Small status labels                      |
+| `Button`    | Clickable actions                        |
+| `Card`      | Summary blocks: goals, risks, checklists |
+| `Checkbox`  | Boolean toggle (bound in Playground)     |
+| `Dialog`    | Modal overlay (bound in Playground)      |
+| `Input`     | Text input (bound in Playground)         |
+| `Popover`   | Floating content (bound in Playground)   |
+| `Tabs`      | Compare approaches, split concerns       |
+| `Textarea`  | Multi-line text (bound in Playground)    |
+| `Tooltip`   | Hover info (bound in Playground)         |
+
+## Adding more
+
+```sh
+npx shadcn@latest add slider switch select
+```
+
+Full registry: [ui.shadcn.com/r](https://ui.shadcn.com/r).
+
+After adding, import in your plan:
+
+```jsx
+import { Slider } from "@/components/ui/slider";
+```
+
+## When to use
+
+- **Tabs** — compare approaches, separate "what" from "why"
+- **Accordion** — long supporting detail most readers can skip
+- **Card** — summary blocks
+- **Playground** — interactive UI previews
+
+## Rules
+
+- Don't use shadcn for the prototype itself — use HTML + Tailwind
+- Don't reuse `.plannar` shadcn components in production — they are plan-only

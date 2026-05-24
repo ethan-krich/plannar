@@ -1,0 +1,60 @@
+---
+title: State binding
+description: How the bind= syntax works and the most common registered elements. See the bindings reference for the full table.
+---
+
+Inside a `<Playground>`, the `bind="name:initialValue"` prop is replaced at compile time with generated `useState` hooks and `value`/`onChange` props.
+
+## Registered binding table
+
+| Element                                                                   | Library | State type | `valueProp` | `changeProp`      |
+| ------------------------------------------------------------------------- | ------- | ---------- | ----------- | ----------------- |
+| `<input>` / `<textarea>`                                                  | HTML    | `string`   | `value`     | `onChange`        |
+| `<input type="checkbox">`                                                 | HTML    | `boolean`  | `checked`   | `onChange`        |
+| `<input type="number">`                                                   | HTML    | `number`   | `value`     | `onChange`        |
+| `<select>`                                                                | HTML    | `string`   | `value`     | `onChange`        |
+| `Checkbox` / `Switch`                                                     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` |
+| `Slider`                                                                  | shadcn  | `number`   | `value`     | `onValueChange`   |
+| `Select` / `Tabs` / `Accordion` / `RadioGroup`                            | shadcn  | `string`   | `value`     | `onValueChange`   |
+| `Dialog` / `AlertDialog` / `Sheet` / `Drawer` / `Popover` / `Collapsible` | shadcn  | `boolean`  | `open`      | `onOpenChange`    |
+| `HoverCard` / `Tooltip` / `DropdownMenu` / `ContextMenu`                  | shadcn  | `boolean`  | `open`      | `onOpenChange`    |
+| `Toggle`                                                                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` |
+
+`Slider` is special: the component expects `number[]`, but the authored state
+variable is a single `number`. The binding's `inject: "[v]"` wraps the value
+into an array when passing it back into the `value=` prop, so you can write
+`${radius}px` against a plain number. See the
+[bindings reference](/docs/reference/bindings) for the full table including
+`extract` / `inject` expressions.
+
+### Lookup order
+
+1. `name:type` — e.g. `<input type="checkbox">` → `input:checkbox`
+2. `name` — e.g. `<Slider>` → `slider`
+
+Unregistered elements get the state variable + `setX` setter but no auto-wired props.
+
+## Custom bindings
+
+Register custom bindings via the `bindings` option on `remarkStateBind`:
+
+```ts
+import { remarkStateBind } from "@plannar/core";
+
+const customBindings = {
+  "my-component": {
+    valueProp: "value",
+    changeProp: "onValueChange",
+    extract: "e.target.value",
+    inject: "[v]", // optional transform
+  },
+};
+
+remarkStateBind({ bindings: customBindings });
+```
+
+Each binding: `valueProp`, `changeProp`, `extract` (expression), and optional `inject` (transform).
+
+## Duplicate names
+
+Duplicate `bind` names within the same Playground are a compile error. Different Playgrounds have independent scopes.

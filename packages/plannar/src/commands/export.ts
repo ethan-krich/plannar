@@ -24,6 +24,7 @@ export default defineCommand({
       exportsFolder: config.exportsFolder,
       globalCss: config.globalCss,
       cssFilePath: config.cssFilePath,
+      meta: config.meta,
       viteConfig: config.viteConfig?.exports,
     });
 

@@ -6,6 +6,8 @@ Plannar helps agents write plans users want to read while being token-efficient.
 >
 > The same applies to `skills/plannar/SKILL.md` — it documents the plannar skill's workflow, MDX authoring rules, Playground bindings, CLI commands, and config. Whenever you change code that affects any of those (new/renamed CLI command or flag, new config field, changed bind syntax or registered binding table, new `<Playground>` capability, altered plan-file conventions), update `SKILL.md` in the same change and flag it for the user. The skill drifts fast otherwise.
 
+The same also applies to `apps/site/content/docs/` — the documentation site for Plannar. Whenever you change code that affects what the docs cover (new/renamed CLI commands or flags, new config fields, changed bind syntax, new components, altered workflows), update the corresponding docs pages and flag it for the user.
+
 ## Project structure
 
 Monorepo with packages and apps.
@@ -62,6 +64,7 @@ Config fields (`PlannarConfig` type in `packages/plannar/src/config.ts`):
 - `exportsFolder` — default `".plannar/exports"` (resolved from `plannarFolder`)
 - `globalCss` — path to CSS file overriding builtin styles, default `".plannar/index.css"`
 - `cssFilePath` — additional CSS file to load alongside
+- `meta` — `Record<string, BindingMeta>`, custom component bindings merged with built-in registries
 - `viteConfig` — `{ editor?, exports? }` overrides deep-merged into Vite configs (JS/TS configs only)
 
 JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
@@ -69,10 +72,11 @@ JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
 ### How config flows
 
 1. CLI commands (`editor`, `export`) call `resolveConfig(cwd)` from `packages/plannar/src/config.ts`
-2. Editor: config values are set as env vars (`PLANNAR_FOLDER`, `PLANNAR_GLOBAL_CSS`, etc.) consumed by Vite configs
+2. Editor: config values are set as env vars (`PLANNAR_FOLDER`, `PLANNAR_GLOBAL_CSS`, `PLANNAR_META`, etc.) consumed by Vite configs
 3. Export: config is passed as `ExportOptions` to `exportPlan()`
 4. `viteConfig.editor` / `viteConfig.exports` are deep-merged into the respective Vite configurations
 5. CSS overrides: a `virtual:plannar-global-css` Vite plugin resolves to the user's CSS file, loading it after builtin styles so it takes priority
+6. `meta` bindings: merged over shadcn defaults (user entries override built-in) and passed to `remarkStateBind`
 
 ## Version control
 

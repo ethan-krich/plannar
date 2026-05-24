@@ -1,0 +1,35 @@
+---
+title: Agent skills
+description: How Plannar skills work with coding agents and when they trigger.
+---
+
+Plannar ships with skills for coding agents that teach them to write plans as Plannar MDX files instead of walls of markdown. Skills are installed automatically — nothing to configure.
+
+## What skills do
+
+When you ask your coding agent for a plan, the skill triggers and the agent:
+
+1. **Explores** your codebase to understand what is relevant
+2. **Designs** the plan using Tabs, Accordions, Cards, and Playgrounds
+3. **Writes** the plan as an `.mdx` file in `.plannar/plans/`
+
+No prompting gymnastics.
+
+## When skills trigger
+
+Skills activate when you ask your agent to:
+
+- Create a plan, proposal, or design doc
+- Write an implementation breakdown
+- Architect a feature or change
+- Compare approaches
+
+## What you get
+
+Plans written by the skill include:
+
+- **Tabs** for comparing approaches or separating concerns
+- **Accordions** for deep detail most readers skip
+- **Cards** for goals, risks, affected files, checklists
+- **Playgrounds** with live interactive previews
+- **Inline comments** reviewers can turn into follow-up prompts
