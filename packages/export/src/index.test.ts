@@ -1,5 +1,5 @@
 import {
-  cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -7,14 +7,80 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect, afterEach } from "vitest";
 import { exportPlan } from "./index.js";
 
-const _dir = dirname(fileURLToPath(import.meta.url));
-const rootPlannar = join(_dir, "..", "..", "..", ".plannar");
+const pkgDir = dirname(fileURLToPath(import.meta.url));
+
+function findNearestNodeModules(startDir: string): string | null {
+  let dir = resolve(startDir);
+  for (let i = 0; i < 10; i++) {
+    const candidate = join(dir, "node_modules");
+    if (existsSync(candidate)) return candidate;
+    const parent = resolve(dir, "..");
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+function linkNodeModules(plannarDir: string) {
+  const nm = findNearestNodeModules(pkgDir);
+  if (nm) {
+    symlinkSync(nm, join(plannarDir, "node_modules"), "dir");
+  }
+}
+
+function writeFixtureComponents(plannarDir: string) {
+  const libDir = join(plannarDir, "lib");
+  mkdirSync(libDir, { recursive: true });
+  writeFileSync(
+    join(libDir, "utils.ts"),
+    [
+      "export function cn(...inputs: (string | undefined | false | null)[]) {",
+      "  return inputs.filter(Boolean).join(' ');",
+      "}",
+    ].join("\n"),
+    "utf-8",
+  );
+
+  const uiDir = join(plannarDir, "components", "ui");
+  mkdirSync(uiDir, { recursive: true });
+  writeFileSync(
+    join(uiDir, "button.tsx"),
+    [
+      'import { cn } from "@/lib/utils";',
+      "",
+      "const variants: Record<string, string> = {",
+      '  default: "bg-primary text-primary-foreground",',
+      '  outline: "border-border bg-background hover:bg-muted",',
+      "};",
+      "",
+      "function Button({",
+      "  className,",
+      '  variant = "default",',
+      "  ...props",
+      '}: React.ComponentProps<"button"> & { variant?: string }) {',
+      "  return (",
+      "    <button",
+      "      className={cn(",
+      '        "inline-flex items-center justify-center rounded-lg text-sm font-medium h-8 px-2.5",',
+      "        variants[variant],",
+      "        className,",
+      "      )}",
+      "      {...props}",
+      "    />",
+      "  );",
+      "}",
+      "",
+      "export { Button };",
+    ].join("\n"),
+    "utf-8",
+  );
+}
 
 describe("exportPlan", () => {
   const tmpDirs: string[] = [];
@@ -32,9 +98,24 @@ describe("exportPlan", () => {
     const plannarDir = join(dir, ".plannar");
     mkdirSync(plannarDir, { recursive: true });
 
-    cpSync(join(rootPlannar, "components"), join(plannarDir, "components"), { recursive: true });
-    cpSync(join(rootPlannar, "lib"), join(plannarDir, "lib"), { recursive: true });
-    symlinkSync(rootPlannar + "/node_modules", join(plannarDir, "node_modules"), "dir");
+    linkNodeModules(plannarDir);
+
+    const plansDir = join(plannarDir, "plans");
+    mkdirSync(plansDir, { recursive: true });
+    writeFileSync(join(plansDir, `${planName}.mdx`), content, "utf-8");
+
+    return dir;
+  }
+
+  function setupCwdWithComponents(planName: string, content: string) {
+    const dir = mkdtempSync(join(tmpdir(), "plannar-export-test-"));
+    tmpDirs.push(dir);
+
+    const plannarDir = join(dir, ".plannar");
+    mkdirSync(plannarDir, { recursive: true });
+
+    linkNodeModules(plannarDir);
+    writeFixtureComponents(plannarDir);
 
     const plansDir = join(plannarDir, "plans");
     mkdirSync(plansDir, { recursive: true });
@@ -50,9 +131,7 @@ describe("exportPlan", () => {
     const plannarDir = join(dir, ".plans");
     mkdirSync(plannarDir, { recursive: true });
 
-    cpSync(join(rootPlannar, "components"), join(plannarDir, "components"), { recursive: true });
-    cpSync(join(rootPlannar, "lib"), join(plannarDir, "lib"), { recursive: true });
-    symlinkSync(rootPlannar + "/node_modules", join(plannarDir, "node_modules"), "dir");
+    linkNodeModules(plannarDir);
 
     const plansDir = join(plannarDir, "plans");
     mkdirSync(plansDir, { recursive: true });
@@ -79,7 +158,7 @@ describe("exportPlan", () => {
   });
 
   it("includes styles used by generated shadcn components", async () => {
-    const cwd = setupCwd(
+    const cwd = setupCwdWithComponents(
       "button",
       [
         'import { Button } from "@/components/ui/button";',
@@ -108,9 +187,7 @@ describe("exportPlan", () => {
     const plannarDir = join(cwd, ".plannar");
     mkdirSync(plannarDir, { recursive: true });
 
-    cpSync(join(rootPlannar, "components"), join(plannarDir, "components"), { recursive: true });
-    cpSync(join(rootPlannar, "lib"), join(plannarDir, "lib"), { recursive: true });
-    symlinkSync(rootPlannar + "/node_modules", join(plannarDir, "node_modules"), "dir");
+    linkNodeModules(plannarDir);
 
     const plansDir = join(plannarDir, "plans");
     mkdirSync(plansDir, { recursive: true });

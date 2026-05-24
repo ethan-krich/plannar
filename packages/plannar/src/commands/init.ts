@@ -1,6 +1,8 @@
-import { defineCommand } from "citty";
+import { execSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
+import { defineCommand } from "citty";
 
 const componentsJson = {
   $schema: "https://ui.shadcn.com/schema.json",
@@ -206,6 +208,18 @@ Type something below and watch it update in real time:
 - Run \`plannar export <name>\` to export as HTML
 `;
 
+function ask(prompt: string): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+const SKILL_SOURCE = "ethan-krich/plannar@plannar";
+
 export default defineCommand({
   meta: {
     name: "init",
@@ -255,5 +269,22 @@ export default defineCommand({
     console.log("  └── plans/");
     console.log("       └── hello-world.mdx");
     console.log("\nRun 'plannar editor' to preview your plans.");
+
+    if (!process.stdin.isTTY) return;
+
+    const answer = await ask(`\nInstall the plannar agent skill? (${SKILL_SOURCE}) [Y/n] `);
+
+    if (answer && answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
+      console.log("Skipped skill installation. Run: npx skills add " + SKILL_SOURCE + " -g -y");
+      return;
+    }
+
+    console.log("\nInstalling plannar agent skill...\n");
+    try {
+      execSync(`npx skills add ${SKILL_SOURCE} -g -y`, { stdio: "inherit" });
+    } catch {
+      console.log("Skill installation failed. You can install it manually:");
+      console.log("  npx skills add " + SKILL_SOURCE + " -g -y");
+    }
   },
 });

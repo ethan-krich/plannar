@@ -4,7 +4,7 @@ Plannar helps agents write plans users want to read while being token-efficient.
 
 > **Note for agents:** if anything in this file is wrong or out of date as you work, fix it and flag the change to the user for approval.
 >
-> The same applies to `packages/skills/skills/plannar/SKILL.md` — it documents the plannar skill's workflow, MDX authoring rules, Playground bindings, CLI commands, and config. Whenever you change code that affects any of those (new/renamed CLI command or flag, new config field, changed bind syntax or registered binding table, new `<Playground>` capability, altered plan-file conventions), update `SKILL.md` in the same change and flag it for the user. The skill drifts fast otherwise.
+> The same applies to `skills/plannar/SKILL.md` — it documents the plannar skill's workflow, MDX authoring rules, Playground bindings, CLI commands, and config. Whenever you change code that affects any of those (new/renamed CLI command or flag, new config field, changed bind syntax or registered binding table, new `<Playground>` capability, altered plan-file conventions), update `SKILL.md` in the same change and flag it for the user. The skill drifts fast otherwise.
 
 ## Project structure
 

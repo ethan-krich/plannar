@@ -123,6 +123,8 @@ Scaffolds `.plannar/`:
 - `tsconfig.json` — TypeScript config with `@/*` path alias
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
 
+After scaffolding, prompts to install the plannar agent skill via `npx skills add ethan-krich/plannar@plannar -g -y`. The prompt is skipped when stdin is not a TTY (e.g. CI).
+
 ### `plannar editor`
 
 Starts the plan editor dev server with HMR. Resolves project config and sets env vars for Vite. Accepts `--port` (default `5173`) and `--host` (default `localhost`). Deep-merges optional `viteConfig.editor` overrides from JS/TS config files.
