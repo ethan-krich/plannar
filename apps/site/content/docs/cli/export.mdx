@@ -1,0 +1,33 @@
+---
+title: plannar export
+description: Package a plan as a single, self-contained HTML file.
+---
+
+Turns a plan into a standalone HTML file — Playgrounds, state, styles and all.
+
+## Usage
+
+```sh
+plannar export <plan-name>
+```
+
+`<plan-name>` is the plan filename without `.mdx`.
+
+## Behavior
+
+1. Compiles MDX with `@plannar/core` (including state binding)
+2. Builds with Vite, inlining all CSS and JS
+3. Outputs to `.plannar/exports/<plan-name>.html`
+
+The output preserves: Playground interactivity, dark/light mode, theme tokens, styling.
+
+## Config
+
+Output directory: `exportsFolder` (default `.plannar/exports`).
+
+## Use cases
+
+- Attach a plan to a GitHub issue or Linear ticket
+- Email to stakeholders without Plannar
+- Drop in Slack for async review
+- Archive a plan snapshot

@@ -1,0 +1,64 @@
+---
+title: CSS overrides
+description: How globalCss and cssFilePath load, their order, and examples.
+---
+
+Plannar ships two built-in CSS files. You can override them via `globalCss` and `cssFilePath`.
+
+## Built-in styles
+
+| File        | Scope          | Contents                               |
+| ----------- | -------------- | -------------------------------------- |
+| `theme.css` | Global         | shadcn tokens, fonts, reset, dark mode |
+| `mdx.css`   | `.mdx-content` | Headings, code, tables, blockquotes    |
+
+## Load order
+
+1. Built-in `mdx.css`
+2. Built-in `theme.css`
+3. Your `globalCss` (default `.plannar/globals.css`)
+4. Your `cssFilePath` (if set)
+
+## globalCss
+
+For overriding built-in styles. Scaffolded by `plannar init`.
+
+Override theme tokens:
+
+```css
+:root {
+  --primary: oklch(0.55 0.2 250);
+  --radius: 0.5rem;
+}
+.dark {
+  --primary: oklch(0.55 0.2 250);
+}
+```
+
+Override MDX styles:
+
+```css
+.mdpx-content h1 {
+  font-size: 2.5rem;
+}
+.mdpx-content a {
+  color: var(--primary);
+}
+```
+
+## cssFilePath
+
+For supplemental CSS beyond `globalCss`. No default, must be set explicitly.
+
+```json
+{
+  "globalCss": ".plannar/globals.css",
+  "cssFilePath": ".plannar/extra-utilities.css"
+}
+```
+
+## How it works
+
+**Editor:** CSS loads via `virtual:plannar-global-css` (Vite virtual module).
+
+**Exports:** Files are copied to a temp directory and `@import`-ed.

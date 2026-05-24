@@ -1,29 +1,41 @@
-# Vite+ Monorepo Starter
+# Plannar
 
-A starter for creating a Vite+ monorepo.
+> Plans your team will actually read.
 
-## Development
+Plannar turns agent-written plans into interactive MDX documents. Tabs instead of walls of text. Live previews instead of mockups.
 
-- Check everything is ready:
+[Docs](https://github.com/ekrich/plannar/tree/main/apps/site) · [Example](https://github.com/ekrich/plannar/tree/main/apps/site)
 
-```bash
-vp run ready
+## Quick start
+
+```sh
+npx plannar init
+plannar editor
 ```
 
-- Run the tests:
+## What's in the box
 
-```bash
-vp run -r test
+| Package                      | Purpose                                             |
+| ---------------------------- | --------------------------------------------------- |
+| `@plannar/core`              | MDX compiler + state binding remark plugin + styles |
+| `plannar` (CLI)              | `init` / `editor` / `status` / `export` commands    |
+| `@plannar/export`            | Self-contained HTML export                          |
+| `@plannar/registry-metadata` | Bind registrations for HTML + shadcn controls       |
+| `@plannar/skills`            | Agent skills (Claude Code)                          |
+
+## Links
+
+- [Agent skills](https://github.com/ekrich/plannar/tree/main/packages/skills/skills/plannar)
+- [GitHub Issues](https://github.com/ekrich/plannar/issues)
+
+## Contributing
+
+```sh
+pnpm install && vp run ready
 ```
 
-- Build the monorepo:
+See `AGENTS.md` and `CLAUDE.md` for project conventions.
 
-```bash
-vp run -r build
-```
+## License
 
-- Run the development server:
-
-```bash
-vp run dev
-```
+MIT

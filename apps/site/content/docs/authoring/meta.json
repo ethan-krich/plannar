@@ -1,0 +1,4 @@
+{
+  "title": "Authoring",
+  "pages": ["mdx", "components", "playground", "state-binding", "styling"]
+}

@@ -1,0 +1,36 @@
+---
+title: Installation
+description: Scaffold Plannar in your project with a single command.
+---
+
+`plannar init` scaffolds everything you need to start writing plans.
+
+## Prerequisites
+
+- **Node.js** 18 or later
+- A project directory (any project)
+
+## Quick install
+
+```sh
+npx plannar init
+```
+
+This creates `.plannar/` in your current directory:
+
+| File                    | Purpose                               |
+| ----------------------- | ------------------------------------- |
+| `config.json`           | Project-level plannar config          |
+| `components.json`       | shadcn/ui configuration (Tailwind v4) |
+| `globals.css`           | Override built-in styles              |
+| `plans/hello-world.mdx` | Sample plan with state binding        |
+| `components/ui/*`       | Pre-installed shadcn components       |
+| `index.css`             | Tailwind v4 + theme tokens            |
+
+## Adding components
+
+```sh
+npx shadcn@latest add card tabs accordion slider
+```
+
+Components are imported with `@/components/ui/...` alias and work inside Playground blocks.

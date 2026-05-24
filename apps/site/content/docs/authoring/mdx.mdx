@@ -1,0 +1,49 @@
+---
+title: MDX basics
+description: How to write Plannar plans in MDX — syntax, imports, and structure.
+---
+
+Plannar plans are [MDX](https://mdxjs.com) files — markdown with embedded React components. Each plan lives in `.plannar/plans/` as a `.mdx` file.
+
+## Frontmatter
+
+Every plan starts with YAML frontmatter:
+
+```yaml
+---
+title: My Plan
+description: A short summary.
+---
+```
+
+## Markdown
+
+Standard CommonMark: headings, paragraphs, lists, bold, italic, links, images, code blocks (with syntax highlighting), tables, blockquotes.
+
+## Imports
+
+Import components at the top of the file with the `@/` alias:
+
+```jsx
+import { Tabs, Tab } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+```
+
+## Components
+
+Use imported components anywhere — between paragraphs, inside lists, nested:
+
+```jsx
+<Card>
+  <CardContent>
+    <p className="text-sm">Content inside a Card.</p>
+  </CardContent>
+</Card>
+```
+
+## Conventions
+
+- Use `function` keyword for React components
+- Put file paths in backticks: `plans/feature.mdx:42`
+- Keep prose tight — use lists, tables, and components instead of long paragraphs

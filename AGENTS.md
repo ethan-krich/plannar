@@ -6,6 +6,8 @@ Plannar helps agents write plans users want to read while being token-efficient.
 >
 > The same applies to `packages/skills/skills/plannar/SKILL.md` — it documents the plannar skill's workflow, MDX authoring rules, Playground bindings, CLI commands, and config. Whenever you change code that affects any of those (new/renamed CLI command or flag, new config field, changed bind syntax or registered binding table, new `<Playground>` capability, altered plan-file conventions), update `SKILL.md` in the same change and flag it for the user. The skill drifts fast otherwise.
 
+The same also applies to `apps/site/content/docs/` — the documentation site for Plannar. Whenever you change code that affects what the docs cover (new/renamed CLI commands or flags, new config fields, changed bind syntax, new components, altered workflows), update the corresponding docs pages and flag it for the user.
+
 ## Project structure
 
 Monorepo with packages and apps.

@@ -1,0 +1,47 @@
+---
+title: Playground
+description: Embed live, interactive previews inside any plan with the Playground component.
+---
+
+A `<Playground>` wraps content that should be interactive and live. Inside it, the `bind` prop on any element auto-wires React state — no hooks needed.
+
+## Basic example
+
+```jsx
+<Playground>
+  <input type="range" min="0" max="48" bind="radius:12" className="w-full" />
+  <div style={{ borderRadius: `${radius}px` }}>{radius}px</div>
+</Playground>
+```
+
+## How it works
+
+1. Each `<Playground>` is its own scope — state does not leak.
+2. Elements with `bind="name"` get `value` and `onChange` props at compile time.
+3. A `useState` hook is generated for each bound name.
+
+## Syntax
+
+- `bind="name"` — state starts as `undefined`
+- `bind="name:value"` — explicit initial value (e.g. `count:0`)
+- Duplicate bind names within one Playground are an error
+- Nested Playgrounds get independent scopes
+
+## Registered vs unregistered
+
+**Registered** elements (HTML inputs, most shadcn controls) have built-in bindings. **Unregistered** elements (like Button) get state + a `setXxx` setter:
+
+```jsx
+<Playground>
+  <Button bind="count:0" onClick={() => setCount(count + 1)}>
+    Clicked {count} times
+  </Button>
+</Playground>
+```
+
+## Rules
+
+- Don't use shadcn for the prototype itself — HTML + Tailwind
+- Don't wire previews to real APIs
+- Use Tailwind for styling; inline styles for dynamic values
+- One `bind` per element

@@ -1,0 +1,38 @@
+---
+title: Editor tour
+description: Explore the Plannar editor UI — file browser, preview, comments, and dark mode.
+---
+
+The editor previews plans as you write them — a Vite dev server with HMR.
+
+## Starting
+
+```sh
+plannar editor
+```
+
+Options: `--port` (default `5173`), `--host` (default `localhost`).
+
+## File browser
+
+Left sidebar lists every `.mdx` file in `.plannar/plans/`. Add a file and it appears without restart.
+
+## Live preview
+
+The main area renders the plan. Every Playground is interactive. HMR on every save.
+
+## Inline comments
+
+Click **comment** (bottom-right) to enter comment mode. Highlight text or click a heading/Playground to leave feedback. Comments generate prompts the author can paste to their agent.
+
+## Dark mode
+
+Respects system preference. Auto-switches between light and dark themes.
+
+## Status check
+
+```sh
+plannar status
+```
+
+Reports whether the editor is running and on which port.
