@@ -19,7 +19,7 @@ describe("resolveConfig", () => {
 
       expect(config.plannarFolder).toBe(".custom-plannar");
       expect(config.exportsFolder).toBe(".custom-plannar/exports");
-      expect(config.globalCss).toBe(".custom-plannar/globals.css");
+      expect(config.globalCss).toBe(".custom-plannar/index.css");
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }

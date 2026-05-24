@@ -60,7 +60,7 @@ Config fields (`PlannarConfig` type in `packages/plannar/src/config.ts`):
 
 - `plannarFolder` — default `".plannar"`
 - `exportsFolder` — default `".plannar/exports"` (resolved from `plannarFolder`)
-- `globalCss` — path to CSS file overriding builtin styles, default `".plannar/globals.css"`
+- `globalCss` — path to CSS file overriding builtin styles, default `".plannar/index.css"`
 - `cssFilePath` — additional CSS file to load alongside
 - `viteConfig` — `{ editor?, exports? }` overrides deep-merged into Vite configs (JS/TS configs only)
 
