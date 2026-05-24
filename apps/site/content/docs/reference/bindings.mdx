@@ -7,17 +7,23 @@ The `bind="name:initial"` prop, when used inside a `<Playground>`, is replaced a
 
 ## Registered binding table
 
-| Element                   | Library | Datatype   | `valueProp` | `changeProp`      | Extract                  |
-| ------------------------- | ------- | ---------- | ----------- | ----------------- | ------------------------ |
-| `<input>` / `<textarea>`  | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         |
-| `<input type="checkbox">` | HTML    | `boolean`  | `checked`   | `onChange`        | `e.target.checked`       |
-| `<input type="number">`   | HTML    | `number`   | `value`     | `onChange`        | `e.target.valueAsNumber` |
-| `<select>`                | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         |
-| `Checkbox` / `Switch`     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` | `e`                      |
-| `Slider`                  | shadcn  | `number[]` | `value`     | `onValueChange`   | `e[0]`                   |
-| `Select` / `Tabs`         | shadcn  | `string`   | `value`     | `onValueChange`   | `e`                      |
-| `Dialog` / `Sheet` etc.   | shadcn  | `boolean`  | `open`      | `onOpenChange`    | `e`                      |
-| `Toggle`                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` | `e`                      |
+| Element                                                                   | Library | State type | `valueProp` | `changeProp`      | Extract                  | Inject |
+| ------------------------------------------------------------------------- | ------- | ---------- | ----------- | ----------------- | ------------------------ | ------ |
+| `<input>` / `<textarea>`                                                  | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         | —      |
+| `<input type="checkbox">`                                                 | HTML    | `boolean`  | `checked`   | `onChange`        | `e.target.checked`       | —      |
+| `<input type="number">`                                                   | HTML    | `number`   | `value`     | `onChange`        | `e.target.valueAsNumber` | —      |
+| `<select>`                                                                | HTML    | `string`   | `value`     | `onChange`        | `e.target.value`         | —      |
+| `Checkbox` / `Switch`                                                     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` | `e`                      | —      |
+| `Slider`                                                                  | shadcn  | `number`   | `value`     | `onValueChange`   | `e[0]`                   | `[v]`  |
+| `Select` / `Tabs` / `Accordion` / `RadioGroup`                            | shadcn  | `string`   | `value`     | `onValueChange`   | `e`                      | —      |
+| `Dialog` / `AlertDialog` / `Sheet` / `Drawer` / `Popover` / `Collapsible` | shadcn  | `boolean`  | `open`      | `onOpenChange`    | `e`                      | —      |
+| `HoverCard` / `Tooltip` / `DropdownMenu` / `ContextMenu`                  | shadcn  | `boolean`  | `open`      | `onOpenChange`    | `e`                      | —      |
+| `Toggle`                                                                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` | `e`                      | —      |
+
+`Slider` is a special case: the component prop expects `number[]`, but the
+authored state variable is a single `number`. `extract: "e[0]"` unwraps the
+array on change, and `inject: "[v]"` re-wraps the value when passing it back
+into `value=`. So you write `${radius}px` against a plain number.
 
 ## Lookup order
 

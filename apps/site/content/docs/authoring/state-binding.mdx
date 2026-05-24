@@ -1,23 +1,31 @@
 ---
 title: State binding
-description: Complete reference for the bind= syntax — every registered element and its data type.
+description: How the bind= syntax works and the most common registered elements. See the bindings reference for the full table.
 ---
 
 Inside a `<Playground>`, the `bind="name:initialValue"` prop is replaced at compile time with generated `useState` hooks and `value`/`onChange` props.
 
 ## Registered binding table
 
-| Element                   | Library | Datatype   | `valueProp` | `changeProp`      |
-| ------------------------- | ------- | ---------- | ----------- | ----------------- |
-| `<input>` / `<textarea>`  | HTML    | `string`   | `value`     | `onChange`        |
-| `<input type="checkbox">` | HTML    | `boolean`  | `checked`   | `onChange`        |
-| `<input type="number">`   | HTML    | `number`   | `value`     | `onChange`        |
-| `<select>`                | HTML    | `string`   | `value`     | `onChange`        |
-| `Checkbox` / `Switch`     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` |
-| `Slider`                  | shadcn  | `number[]` | `value`     | `onValueChange`   |
-| `Select` / `Tabs`         | shadcn  | `string`   | `value`     | `onValueChange`   |
-| `Dialog` / `Sheet` / etc. | shadcn  | `boolean`  | `open`      | `onOpenChange`    |
-| `Toggle`                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` |
+| Element                                                                   | Library | State type | `valueProp` | `changeProp`      |
+| ------------------------------------------------------------------------- | ------- | ---------- | ----------- | ----------------- |
+| `<input>` / `<textarea>`                                                  | HTML    | `string`   | `value`     | `onChange`        |
+| `<input type="checkbox">`                                                 | HTML    | `boolean`  | `checked`   | `onChange`        |
+| `<input type="number">`                                                   | HTML    | `number`   | `value`     | `onChange`        |
+| `<select>`                                                                | HTML    | `string`   | `value`     | `onChange`        |
+| `Checkbox` / `Switch`                                                     | shadcn  | `boolean`  | `checked`   | `onCheckedChange` |
+| `Slider`                                                                  | shadcn  | `number`   | `value`     | `onValueChange`   |
+| `Select` / `Tabs` / `Accordion` / `RadioGroup`                            | shadcn  | `string`   | `value`     | `onValueChange`   |
+| `Dialog` / `AlertDialog` / `Sheet` / `Drawer` / `Popover` / `Collapsible` | shadcn  | `boolean`  | `open`      | `onOpenChange`    |
+| `HoverCard` / `Tooltip` / `DropdownMenu` / `ContextMenu`                  | shadcn  | `boolean`  | `open`      | `onOpenChange`    |
+| `Toggle`                                                                  | shadcn  | `boolean`  | `pressed`   | `onPressedChange` |
+
+`Slider` is special: the component expects `number[]`, but the authored state
+variable is a single `number`. The binding's `inject: "[v]"` wraps the value
+into an array when passing it back into the `value=` prop, so you can write
+`${radius}px` against a plain number. See the
+[bindings reference](/docs/reference/bindings) for the full table including
+`extract` / `inject` expressions.
 
 ### Lookup order
 
