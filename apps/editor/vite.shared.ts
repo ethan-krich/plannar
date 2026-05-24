@@ -22,11 +22,18 @@ export const shadcnBindings: Record<string, BindingMeta> = {
 function resolveUserMeta(): Record<string, BindingMeta> {
   const raw = process.env.PLANNAR_META;
   if (!raw) return {};
+  let parsed: unknown;
   try {
-    return JSON.parse(raw) as Record<string, BindingMeta>;
-  } catch {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.warn("[plannar] Failed to parse PLANNAR_META as JSON; ignoring.", err);
     return {};
   }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    console.warn("[plannar] PLANNAR_META must be a JSON object; ignoring.");
+    return {};
+  }
+  return parsed as Record<string, BindingMeta>;
 }
 
 const SAFE_PLAN_SEGMENT = /^[a-z0-9][a-z0-9_-]*$/;

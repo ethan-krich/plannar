@@ -40,7 +40,7 @@ export async function exportPlan(planName: string, options: ExportOptions = {}):
   const planPath = join(cwd, plannarFolder, "plans", `${planName}.mdx`);
 
   const compiled = await generateMdx(planPath, {
-    bindings: { ...shadcnBindings, ...options.meta },
+    bindings: { ...shadcnBindings, ...normalizeMeta(options.meta) },
   });
 
   const tmpDir = mkdtempSync(join(tmpdir(), "plannar-export-"));
@@ -56,6 +56,13 @@ export async function exportPlan(planName: string, options: ExportOptions = {}):
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
   }
+}
+
+function normalizeMeta(meta: unknown): Record<string, BindingMeta> {
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+    return {};
+  }
+  return meta as Record<string, BindingMeta>;
 }
 
 function deepMerge<T extends Record<string, unknown>>(
