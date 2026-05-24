@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Plugin } from "vite";
 import { generateMdx } from "@plannar/core";
+import type { BindingMeta } from "@plannar/core";
 import { shadcnBindings } from "@plannar/registry-metadata";
 
 function hoistImports(code: string): string {
@@ -17,9 +18,14 @@ function hoistImports(code: string): string {
   return [...imports, ...rest].join("\n");
 }
 
-export function plannarPlansPlugin(cwd: string, plannarFolder = ".plannar"): Plugin {
+export function plannarPlansPlugin(
+  cwd: string,
+  plannarFolder = ".plannar",
+  meta?: Record<string, BindingMeta>,
+): Plugin {
   const plansDir = join(cwd, plannarFolder, "plans");
   const plannarRoot = join(cwd, plannarFolder);
+  const bindings = { ...shadcnBindings, ...meta };
 
   return {
     name: "plannar-plans",
@@ -51,7 +57,7 @@ export function plannarPlansPlugin(cwd: string, plannarFolder = ".plannar"): Plu
         const compiled = hoistImports(
           await generateMdx(planPath, {
             content: raw,
-            bindings: shadcnBindings,
+            bindings,
           }),
         );
         return compiled.replace(

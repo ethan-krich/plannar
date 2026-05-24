@@ -62,6 +62,7 @@ Config fields (`PlannarConfig` type in `packages/plannar/src/config.ts`):
 - `exportsFolder` — default `".plannar/exports"` (resolved from `plannarFolder`)
 - `globalCss` — path to CSS file overriding builtin styles, default `".plannar/index.css"`
 - `cssFilePath` — additional CSS file to load alongside
+- `meta` — `Record<string, BindingMeta>`, custom component bindings merged with built-in registries
 - `viteConfig` — `{ editor?, exports? }` overrides deep-merged into Vite configs (JS/TS configs only)
 
 JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
@@ -69,10 +70,11 @@ JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
 ### How config flows
 
 1. CLI commands (`editor`, `export`) call `resolveConfig(cwd)` from `packages/plannar/src/config.ts`
-2. Editor: config values are set as env vars (`PLANNAR_FOLDER`, `PLANNAR_GLOBAL_CSS`, etc.) consumed by Vite configs
+2. Editor: config values are set as env vars (`PLANNAR_FOLDER`, `PLANNAR_GLOBAL_CSS`, `PLANNAR_META`, etc.) consumed by Vite configs
 3. Export: config is passed as `ExportOptions` to `exportPlan()`
 4. `viteConfig.editor` / `viteConfig.exports` are deep-merged into the respective Vite configurations
 5. CSS overrides: a `virtual:plannar-global-css` Vite plugin resolves to the user's CSS file, loading it after builtin styles so it takes priority
+6. `meta` bindings: merged over shadcn defaults (user entries override built-in) and passed to `remarkStateBind`
 
 ## Version control
 

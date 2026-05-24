@@ -51,6 +51,9 @@ export default defineCommand({
     if (config.cssFilePath) {
       process.env.PLANNAR_CSS_FILE_PATH = resolve(cwd, config.cssFilePath);
     }
+    if (config.meta) {
+      process.env.PLANNAR_META = JSON.stringify(config.meta);
+    }
 
     const pkgDir = fileURLToPath(new URL("..", import.meta.url));
     const editorRoot = findEditorRoot(pkgDir);
