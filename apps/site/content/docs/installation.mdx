@@ -18,14 +18,13 @@ npx plannar init
 
 This creates `.plannar/` in your current directory:
 
-| File                    | Purpose                               |
-| ----------------------- | ------------------------------------- |
-| `config.json`           | Project-level plannar config          |
-| `components.json`       | shadcn/ui configuration (Tailwind v4) |
-| `globals.css`           | Override built-in styles              |
-| `plans/hello-world.mdx` | Sample plan with state binding        |
-| `components/ui/*`       | Pre-installed shadcn components       |
-| `index.css`             | Tailwind v4 + theme tokens            |
+| File                    | Purpose                                |
+| ----------------------- | -------------------------------------- |
+| `components.json`       | shadcn/ui configuration (Tailwind v4)  |
+| `package.json`          | npm package (enables `npx shadcn add`) |
+| `plans/hello-world.mdx` | Sample plan with state binding         |
+
+Config is not scaffolded. Create a `plannar.config.{js,ts,json}` at your project root to customize.
 
 ## Adding components
 

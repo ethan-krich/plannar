@@ -116,12 +116,12 @@ Custom bindings can be registered by passing a `bindings` record to the plugin w
 
 Scaffolds `.plannar/`:
 
-- `components.json` — shadcn/ui config (style `base-nova`, Tailwind v4)
-- `config.json` — default project config
-- `index.css` — shadcn theme with design tokens, also serves as style override entry point
+- `components.json` — shadcn/ui config (style `base-nova`, Tailwind v4, CSS target points to a junk file in `node_modules/`)
 - `package.json` — npm package (enables `npx shadcn add`)
-- `tsconfig.json` — TypeScript config with `@/*` path alias
+- `node_modules/.plannar-junk.css` — dummy CSS target for shadcn, cleaned up on every CLI action
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
+
+Config is not scaffolded into `.plannar/`. Users who need custom config create a `plannar.config.{js,ts,json}` at their project root (see Configuration below).
 
 After scaffolding, prompts to install the plannar agent skill via `npx skills add ethan-krich/plannar@plannar` (project-level, interactive agent selection). The prompt is skipped when stdin is not a TTY (e.g. CI).
 
@@ -144,16 +144,16 @@ Plannar resolves config merged **local > global > defaults**. JS/TS configs load
 
 ### Fields
 
-| Field           | Type                           | Default                | Description                                                  |
-| --------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------ |
-| `plannarFolder` | `string`                       | `".plannar"`           | Root folder for plans, components, and config                |
-| `exportsFolder` | `string`                       | `".plannar/exports"`   | Output directory for exported HTML                           |
-| `globalCss`     | `string?`                      | `".plannar/index.css"` | CSS that overrides builtin styles                            |
-| `cssFilePath`   | `string?`                      | _none_                 | Additional CSS loaded alongside `globalCss`                  |
-| `meta`          | `Record<string, BindingMeta>?` | _none_                 | Custom component bindings merged with built-in registrations |
-| `viteConfig`    | `object?`                      | _none_                 | Deep-merged Vite overrides: `{ editor?: {}, exports?: {} }`  |
+| Field           | Type                           | Default              | Description                                                  |
+| --------------- | ------------------------------ | -------------------- | ------------------------------------------------------------ |
+| `plannarFolder` | `string`                       | `".plannar"`         | Root folder for plans, components, and config                |
+| `exportsFolder` | `string`                       | `".plannar/exports"` | Output directory for exported HTML                           |
+| `globalCss`     | `string?`                      | _none_               | CSS that overrides builtin styles                            |
+| `cssFilePath`   | `string?`                      | _none_               | Additional CSS loaded alongside `globalCss`                  |
+| `meta`          | `Record<string, BindingMeta>?` | _none_               | Custom component bindings merged with built-in registrations |
+| `viteConfig`    | `object?`                      | _none_               | Deep-merged Vite overrides: `{ editor?: {}, exports?: {} }`  |
 
-`exportsFolder` and `globalCss` derive from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `globalCss` becomes `.my-plans/index.css`. An explicit `globalCss` is preserved regardless.
+`exportsFolder` derives from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `exportsFolder` becomes `.my-plans/exports`.
 
 The `meta` field registers custom component bindings so user components support the `bind` prop in Playground blocks. Each entry maps a component name to a `BindingMeta` object with `valueProp`, `changeProp`, `extract`, and optional `inject`:
 
@@ -170,7 +170,7 @@ export default {
 };
 ```
 
-Run `plannar init` to scaffold `.plannar/` with `components.json`, `config.json`, `index.css`, `package.json`, `tsconfig.json`, and `plans/hello-world.mdx`.
+Run `plannar init` to scaffold `.plannar/` with `components.json`, `package.json`, and `plans/hello-world.mdx`.
 
 ### CSS overrides
 
@@ -178,7 +178,7 @@ Builtin styles come from `theme.css` (shadcn tokens, fonts, reset, dark mode) an
 
 1. Builtin `mdx.css` → Builtin `theme.css` → Your `globalCss` → Your `cssFilePath`
 
-`globalCss` is for overriding builtins (has a default, scaffolded by `init`). `cssFilePath` is supplemental (no default, must be explicit).
+`globalCss` is for overriding builtins (no default — set via `plannar.config`). `cssFilePath` is supplemental (no default, must be explicit).
 
 Override theme tokens on `:root` / `.dark`:
 

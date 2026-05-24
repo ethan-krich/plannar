@@ -46,31 +46,25 @@ describe("init command", () => {
       const plannarDir = join(tmp, ".plannar");
 
       expect(existsSync(join(plannarDir, "components.json"))).toBe(true);
-      expect(existsSync(join(plannarDir, "config.json"))).toBe(true);
-      expect(existsSync(join(plannarDir, "index.css"))).toBe(true);
       expect(existsSync(join(plannarDir, "package.json"))).toBe(true);
-      expect(existsSync(join(plannarDir, "tsconfig.json"))).toBe(true);
       expect(existsSync(join(plannarDir, "plans", "hello-world.mdx"))).toBe(true);
+      expect(existsSync(join(plannarDir, "node_modules", ".plannar-junk.css"))).toBe(true);
+
+      // No longer created by init
+      expect(existsSync(join(plannarDir, "config.json"))).toBe(false);
+      expect(existsSync(join(plannarDir, "index.css"))).toBe(false);
+      expect(existsSync(join(plannarDir, "tsconfig.json"))).toBe(false);
 
       const pkg = JSON.parse(readFileSync(join(plannarDir, "package.json"), "utf-8"));
       expect(pkg.name).toBe("plannar");
       expect(pkg.private).toBe(true);
       expect(pkg.type).toBe("module");
 
-      const tsconfig = JSON.parse(readFileSync(join(plannarDir, "tsconfig.json"), "utf-8"));
-      expect(tsconfig.compilerOptions.jsx).toBe("react-jsx");
-      expect(tsconfig.compilerOptions.baseUrl).toBe(".");
-      expect(tsconfig.compilerOptions.paths).toEqual({ "@/*": ["./*"] });
+      const components = JSON.parse(readFileSync(join(plannarDir, "components.json"), "utf-8"));
+      expect(components.tailwind.css).toBe("node_modules/.plannar-junk.css");
 
-      const config = JSON.parse(readFileSync(join(plannarDir, "config.json"), "utf-8"));
-      expect(config.plannarFolder).toBe(".plannar");
-      expect(config.exportsFolder).toBe(".plannar/exports");
-      expect(config.globalCss).toBe(".plannar/index.css");
-
-      const css = readFileSync(join(plannarDir, "index.css"), "utf-8");
-      expect(css).toContain('@import "tailwindcss"');
-      expect(css).toContain("--background: oklch(1 0 0)");
-      expect(css).toContain("@theme inline");
+      const junk = readFileSync(join(plannarDir, "node_modules", ".plannar-junk.css"), "utf-8");
+      expect(junk).toContain("plannar");
 
       const mdx = readFileSync(join(plannarDir, "plans", "hello-world.mdx"), "utf-8");
       expect(mdx).toContain("# Hello, Plannar!");
