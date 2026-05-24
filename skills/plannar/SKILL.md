@@ -119,6 +119,7 @@ Scaffolds `.plannar/`:
 - `components.json` — shadcn/ui config (style `base-nova`, Tailwind v4, CSS target points to a junk file in `node_modules/`)
 - `package.json` — npm package (enables `npx shadcn add`)
 - `tsconfig.json` — TypeScript config with `@/*` path alias
+- `lib/utils.ts` — `cn` utility (clsx + tailwind-merge)
 - `node_modules/.plannar-junk.css` — dummy CSS target for shadcn, cleaned up on every CLI action
 - `plans/hello-world.mdx` — sample plan demonstrating state binding
 

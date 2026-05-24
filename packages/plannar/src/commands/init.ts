@@ -34,6 +34,12 @@ const packageJson = {
   name: "plannar",
   private: true,
   type: "module",
+  dependencies: {
+    "@base-ui/react": "^1.4.1",
+    "class-variance-authority": "^0.7.1",
+    clsx: "^2.1.1",
+    "tailwind-merge": "^3.6.0",
+  },
 };
 
 const tsconfigJson = {
@@ -45,6 +51,14 @@ const tsconfigJson = {
     },
   },
 };
+
+const utilsTs = `import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`;
 
 const samplePlan = `import { Button } from "@/components/ui/button";
 
@@ -123,6 +137,9 @@ export default defineCommand({
       "utf-8",
     );
 
+    mkdirSync(join(plannarDir, "lib"), { recursive: true });
+    writeFileSync(join(plannarDir, "lib", "utils.ts"), utilsTs, "utf-8");
+
     writeFileSync(
       join(nodeModulesDir, ".plannar-junk.css"),
       "/* plannar — styles are managed by the editor, not shadcn */\n",
@@ -135,6 +152,8 @@ export default defineCommand({
     console.log("  └── components.json      (shadcn/ui registry)");
     console.log("  └── package.json         (npm package)");
     console.log("  └── tsconfig.json        (TypeScript config)");
+    console.log("  └── lib/");
+    console.log("       └── utils.ts         (cn utility)");
     console.log("  └── node_modules/");
     console.log("       └── .plannar-junk.css");
     console.log("  └── plans/");
@@ -146,9 +165,14 @@ export default defineCommand({
         cwd: plannarDir,
         stdio: "inherit",
       });
+      console.log("\nInstalling dependencies...\n");
+      execSync("npm install", {
+        cwd: plannarDir,
+        stdio: "inherit",
+      });
     } catch {
-      console.log("shadcn add failed. You can add components manually:");
-      console.log(`  cd ${plannarDir} && npx shadcn@latest add button`);
+      console.log("Setup failed. You can complete it manually:");
+      console.log(`  cd ${plannarDir} && npx shadcn@latest add button && npm install`);
     }
 
     console.log("\nRun 'plannar editor' to preview your plans.");
