@@ -23,6 +23,44 @@
   line-height: 1.75;
 }
 
+@media (prefers-color-scheme: dark) {
+  .mdx-content {
+    --mdx-body: var(--color-zinc-300, oklch(0.871 0.006 286.286));
+    --mdx-heading: var(--color-zinc-50, oklch(0.985 0 0));
+    --mdx-muted: var(--color-zinc-400, oklch(0.705 0.015 286.067));
+    --mdx-border: var(--color-zinc-800, oklch(0.274 0.006 286.033));
+    --mdx-inline-code-bg: var(--color-zinc-800, oklch(0.274 0.006 286.033));
+    --mdx-inline-code-text: var(--color-zinc-200, oklch(0.92 0.004 286.32));
+    --mdx-link: var(--color-zinc-200, oklch(0.92 0.004 286.32));
+    --mdx-table-header-bg: var(--color-zinc-900, oklch(0.21 0.006 285.885));
+    --mdx-table-hover: color-mix(
+      in oklch,
+      var(--color-zinc-800, oklch(0.274 0.006 286.033)) 50%,
+      transparent
+    );
+    --mdx-blockquote-border: var(--color-zinc-700, oklch(0.37 0.013 285.805));
+    --mdx-blockquote-text: var(--color-zinc-400, oklch(0.705 0.015 286.067));
+  }
+}
+
+.dark .mdx-content {
+  --mdx-body: var(--color-zinc-300, oklch(0.871 0.006 286.286));
+  --mdx-heading: var(--color-zinc-50, oklch(0.985 0 0));
+  --mdx-muted: var(--color-zinc-400, oklch(0.705 0.015 286.067));
+  --mdx-border: var(--color-zinc-800, oklch(0.274 0.006 286.033));
+  --mdx-inline-code-bg: var(--color-zinc-800, oklch(0.274 0.006 286.033));
+  --mdx-inline-code-text: var(--color-zinc-200, oklch(0.92 0.004 286.32));
+  --mdx-link: var(--color-zinc-200, oklch(0.92 0.004 286.32));
+  --mdx-table-header-bg: var(--color-zinc-900, oklch(0.21 0.006 285.885));
+  --mdx-table-hover: color-mix(
+    in oklch,
+    var(--color-zinc-800, oklch(0.274 0.006 286.033)) 50%,
+    transparent
+  );
+  --mdx-blockquote-border: var(--color-zinc-700, oklch(0.37 0.013 285.805));
+  --mdx-blockquote-text: var(--color-zinc-400, oklch(0.705 0.015 286.067));
+}
+
 /* ── Headings ── */
 /* :where() zeroes specificity so Tailwind classes on elements always win */
 

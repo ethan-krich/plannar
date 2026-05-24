@@ -179,6 +179,8 @@ if (root) {
 @import "@plannar/core/styles/theme.css";
 ${cssImports}@source "${sourcePath}";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -295,6 +297,9 @@ function inlineAssetsPlugin(outDir: string): Plugin {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+(function(){var e=localStorage.getItem("plannar-theme");if(e==="dark"||(!e&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}})();
+</script>
 <style>
 ${css}
 </style>
