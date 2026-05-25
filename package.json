@@ -8,9 +8,12 @@
     "dev": "vp run editor#dev",
     "dev:site": "pnpm --filter @plannar/site dev",
     "prepare": "vp config",
-    "postinstall": "cd packages/core && vp pack && cd ../.. && vp run --filter '!@plannar/core' build"
+    "postinstall": "cd packages/core && vp pack && cd ../.. && vp run --filter '!@plannar/core' build",
+    "version": "changeset version",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "catalog:",
     "@plannar/core": "workspace:*",
     "@tailwindcss/vite": "^4.1.6",
     "@vitejs/plugin-react": "^4.6.0",
