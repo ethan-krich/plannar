@@ -8,7 +8,7 @@
     "dev": "vp run editor#dev",
     "dev:site": "pnpm --filter @plannar/site dev",
     "prepare": "vp config",
-    "postinstall": "cd packages/core && vp pack && cd ../.. && vp run --filter '!@plannar/core' build",
+    "postinstall": "if [ -z \"$NETLIFY\" ]; then cd packages/core && vp pack && cd ../.. && vp run --filter '!@plannar/core' build; fi",
     "version": "changeset version",
     "release": "changeset publish"
   },
