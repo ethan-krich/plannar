@@ -25,6 +25,7 @@ catalog:
   "@fontsource-variable/geist": ^5.2.8
   react-shiki: ^0.10.0
   shiki: ^4.1.0
+  "@changesets/cli": ^2.31.0
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
