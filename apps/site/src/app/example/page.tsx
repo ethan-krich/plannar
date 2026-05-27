@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function ExamplePage() {
   return (
     <main className="flex-1">
-      <div className="mx-auto max-w-5xl px-6 pt-12 pb-16 md:pt-16 md:pb-20">
+      <div className="mx-auto max-w-3xl px-6 pt-12 pb-16 md:pt-16 md:pb-20">
         <div className="mb-6 flex items-center gap-2 font-mono text-[11px] tracking-[0.04em] text-fd-muted-foreground">
           <Link href="/" className="hover:text-fd-foreground transition-colors">
             plannar
@@ -15,50 +15,87 @@ export default function ExamplePage() {
           <span className="text-fd-foreground">example plan</span>
         </div>
 
-        <h1 className="text-3xl font-medium tracking-[-0.02em] text-fd-foreground mb-2">
-          Sample plan: hello-world.mdx
-        </h1>
-        <p className="text-sm text-fd-muted-foreground mb-8 max-w-xl">
-          This is what an agent-written Plannar plan looks like when rendered. Every Playground is
-          live and interactive — no hooks to wire.
-        </p>
-
-        <div className="rounded-lg border border-fd-border bg-fd-card p-6 md:p-8 space-y-8">
-          <Heading number="1" title="State binding in 6 lines" />
-          <p className="text-sm text-fd-muted-foreground">
-            Drag the range, watch the box change. No useState, no handlers — bind="radius:12" does
-            both.
-          </p>
-          <SliderDemo />
-
-          <Heading number="2" title="Component bindings" />
-          <p className="text-sm text-fd-muted-foreground">
-            The same pattern works for any registered control — inputs, shadcn components.
-            Unregistered elements get a setX setter:
-          </p>
-          <CounterDemo />
-
-          <div className="border-t border-fd-border pt-6">
-            <Heading number="3" title="What else Plannar gives you" />
-
-            <div className="mt-4 space-y-4">
-              <Feature title="Inline comments">
-                Reviewers highlight any text and leave feedback. Plannar generates a prompt you
-                paste back to your agent.
-              </Feature>
-              <Feature title="Self-contained exports">
-                plannar export packages this entire plan — interactivity, state, styles and all —
-                into a single HTML file.
-              </Feature>
-              <Feature title="Real components, not screenshots">
-                Add shadcn components at any time and use them directly in Playgrounds. Mockups and
-                implementation look 1:1.
-              </Feature>
-            </div>
-          </div>
+        <div className="mb-2 inline-flex items-center gap-2 rounded border border-fd-border bg-fd-card px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-fd-muted-foreground">
+          <span>.plannar/plans/hello-world.mdx</span>
         </div>
 
-        <div className="mt-10 flex items-center gap-4">
+        <h1 className="text-4xl font-medium tracking-[-0.02em] text-fd-foreground mb-3">
+          Hello, Plannar!
+        </h1>
+
+        <blockquote className="mb-10 border-l-2 border-fd-border pl-4 text-sm text-fd-muted-foreground">
+          A worked example of what a real plan looks like. Delete this file when you write your
+          first one — or keep it around as a reference.
+        </blockquote>
+
+        <article className="space-y-10">
+          <Section>
+            <H2>
+              Plan: add <Code>--dry-run</Code> to <Code>plannar export</Code>
+            </H2>
+            <Prose>
+              Today <Code>plannar export</Code> writes HTML to disk immediately. Reviewers who just
+              want to see <em>what</em> would be written — and where — have to delete the output
+              after the fact.
+            </Prose>
+            <Prose>
+              A <Code>--dry-run</Code> flag prints the resolved plan list, output paths, and total
+              size, then exits without touching the filesystem.
+            </Prose>
+          </Section>
+
+          <Section>
+            <H2>Behavior</H2>
+            <Prose>Toggle the flag to see the difference:</Prose>
+            <DryRunDemo />
+          </Section>
+
+          <Section>
+            <H2>Edge cases</H2>
+            <ul className="space-y-2 text-sm text-fd-foreground/90">
+              <Bullet term="Empty plans directory">
+                exit 0 with <Code>no plans found</Code> (same as today).
+              </Bullet>
+              <Bullet term="--out set to a non-existent dir">
+                dry-run still validates the path and warns; no <Code>mkdir</Code>.
+              </Bullet>
+              <Bullet term="A plan fails to compile">
+                dry-run reports the error and exits non-zero, matching the non-dry path.
+              </Bullet>
+            </ul>
+          </Section>
+
+          <Section>
+            <H2>Acceptance</H2>
+            <ul className="space-y-2 text-sm text-fd-foreground/90">
+              <Check>
+                <Code>plannar export --dry-run</Code> exits 0 and writes nothing
+              </Check>
+              <Check>Output lists each plan, target path, and byte size</Check>
+              <Check>Same exit codes as a real export on compile errors</Check>
+              <Check>
+                Covered by a test in <Code>packages/plannar/src/commands/export.test.ts</Code>
+              </Check>
+            </ul>
+          </Section>
+
+          <Section>
+            <H2>Next steps for you</H2>
+            <ul className="space-y-2 text-sm text-fd-foreground/90 list-disc pl-5 marker:text-fd-muted-foreground">
+              <li>
+                Edit this file in <Code>.plannar/plans/hello-world.mdx</Code> to draft your own plan
+              </li>
+              <li>
+                Run <Code>plannar editor</Code> to preview it live with HMR
+              </li>
+              <li>
+                Run <Code>plannar export &lt;name&gt;</Code> to package it as a single HTML file
+              </li>
+            </ul>
+          </Section>
+        </article>
+
+        <div className="mt-12 flex items-center gap-4">
           <Link
             href="/docs"
             className="inline-flex items-center gap-2 rounded bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
@@ -77,70 +114,88 @@ export default function ExamplePage() {
   );
 }
 
-function Heading({ number, title }: { number: string; title: string }) {
+function Section({ children }: { children: React.ReactNode }) {
+  return <section className="space-y-3">{children}</section>;
+}
+
+function H2({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="flex size-6 items-center justify-center rounded bg-fd-primary/10 text-[10px] font-mono text-fd-primary">
-        {number}
-      </span>
-      <h2 className="text-lg font-semibold text-fd-foreground">{title}</h2>
-    </div>
+    <h2 className="text-xl font-semibold text-fd-foreground tracking-[-0.01em]">{children}</h2>
   );
 }
 
-function Feature({ title, children }: { title: string; children: React.ReactNode }) {
+function Prose({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm leading-relaxed text-fd-foreground/90">{children}</p>;
+}
+
+function Code({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-fd-border p-4">
-      <div className="text-xs font-medium text-fd-foreground mb-1">{title}</div>
-      <p className="text-xs text-fd-muted-foreground">{children}</p>
-    </div>
+    <code className="rounded bg-fd-muted px-1.5 py-0.5 font-mono text-[0.85em] text-fd-foreground">
+      {children}
+    </code>
   );
 }
 
-function SliderDemo() {
-  const [radius, setRadius] = useState(12);
-
+function Bullet({ term, children }: { term: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-3">
-      <input
-        type="range"
-        min={0}
-        max={48}
-        value={radius}
-        onChange={(e) => setRadius(Number(e.target.value))}
-        className="w-full"
+    <li className="rounded border border-fd-border bg-fd-card px-3 py-2">
+      <span className="font-medium text-fd-foreground">{term}</span>
+      <span className="text-fd-muted-foreground"> — {children}</span>
+    </li>
+  );
+}
+
+function Check({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span
+        aria-hidden
+        className="mt-[3px] inline-flex size-4 shrink-0 items-center justify-center rounded border border-fd-border bg-fd-card"
       />
-      <div className="flex items-center gap-3">
-        <div
-          className="grid h-24 flex-1 place-items-center bg-fd-primary text-fd-primary-foreground text-sm font-mono transition-[border-radius]"
-          style={{ borderRadius: `${radius}px` }}
-        >
-          {radius}px
-        </div>
-        <div className="text-[10px] font-mono text-fd-muted-foreground uppercase tracking-wider shrink-0">
-          <pre className="whitespace-pre">
-            {`bind="radius:12"\n→ useState(12)\n→ onChange wired`}
-          </pre>
-        </div>
-      </div>
-    </div>
+      <span className="text-fd-foreground/90">{children}</span>
+    </li>
   );
 }
 
-function CounterDemo() {
-  const [count, setCount] = useState(0);
+function DryRunDemo() {
+  const [dryRun, setDryRun] = useState(false);
+
+  const output = dryRun
+    ? `$ plannar export --dry-run
+[dry-run] would write 3 plans:
+  .plannar/exports/onboarding.html   (42 KB)
+  .plannar/exports/pagination.html   (38 KB)
+  .plannar/exports/rate-limit.html   (51 KB)
+[dry-run] total: 131 KB — no files written`
+    : `$ plannar export
+✓ wrote .plannar/exports/onboarding.html
+✓ wrote .plannar/exports/pagination.html
+✓ wrote .plannar/exports/rate-limit.html
+3 plans exported (131 KB)`;
 
   return (
-    <div className="flex items-center gap-4">
-      <button
-        onClick={() => setCount(count + 1)}
-        className="inline-flex items-center gap-2 rounded border border-fd-border px-4 py-2 text-sm hover:bg-fd-muted transition-colors"
-      >
-        Clicked {count} times
-      </button>
-      <span className="text-[10px] font-mono text-fd-muted-foreground">
-        bind="count:0" → onClick wired
-      </span>
+    <div className="rounded-lg border border-fd-border bg-fd-card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <button
+          onClick={() => setDryRun(!dryRun)}
+          className={`inline-flex items-center gap-2 rounded border px-3 py-1.5 text-xs font-medium transition-colors ${
+            dryRun
+              ? "border-fd-primary bg-fd-primary text-fd-primary-foreground"
+              : "border-fd-border bg-fd-background text-fd-foreground hover:bg-fd-muted"
+          }`}
+        >
+          <span
+            className={`size-2 rounded-full ${dryRun ? "bg-fd-primary-foreground" : "bg-fd-muted-foreground/40"}`}
+          />
+          {dryRun ? "--dry-run ON" : "--dry-run OFF"}
+        </button>
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fd-muted-foreground">
+          {dryRun ? "preview only" : "writes to disk"}
+        </span>
+      </div>
+      <pre className="rounded-md border border-fd-border bg-fd-background px-3 py-3 font-mono text-[12px] leading-relaxed text-fd-foreground whitespace-pre overflow-x-auto">
+        {output}
+      </pre>
     </div>
   );
 }
