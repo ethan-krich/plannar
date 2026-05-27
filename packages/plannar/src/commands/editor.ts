@@ -6,18 +6,19 @@ import { existsSync } from "node:fs";
 import { resolveConfig, merge } from "../config.js";
 
 function findEditorRoot(startDir: string): string {
-  const packagedEditor = resolve(startDir, "editor", "index.html");
-  if (existsSync(packagedEditor)) {
-    return resolve(startDir, "editor");
-  }
-
   let dir = startDir;
   for (let i = 0; i < 10; i++) {
-    const candidate = resolve(dir, "apps/editor/index.html");
-    if (existsSync(candidate)) return resolve(dir, "apps/editor");
-    dir = resolve(dir, "..");
+    const bundled = resolve(dir, "editor");
+    if (existsSync(resolve(bundled, "vite.config.ts"))) return bundled;
+
+    const dev = resolve(dir, "apps", "editor");
+    if (existsSync(resolve(dev, "vite.config.ts"))) return dev;
+
+    const parent = resolve(dir, "..");
+    if (parent === dir) break;
+    dir = parent;
   }
-  throw new Error("Could not find apps/editor relative to CLI package");
+  throw new Error("Could not find editor relative to CLI package");
 }
 
 export default defineCommand({
@@ -55,8 +56,8 @@ export default defineCommand({
       process.env.PLANNAR_META = JSON.stringify(config.meta);
     }
 
-    const pkgDir = fileURLToPath(new URL("..", import.meta.url));
-    const editorRoot = findEditorRoot(pkgDir);
+    const moduleDir = fileURLToPath(new URL(".", import.meta.url));
+    const editorRoot = findEditorRoot(moduleDir);
     const configFile = resolve(editorRoot, "vite.config.ts");
 
     const baseServerConfig: Record<string, unknown> = {

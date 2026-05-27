@@ -31,3 +31,5 @@ apps/editor/vite.shared.d.ts
 
 # Plannar exports (build artifacts)
 .plannar/exports/
+# Local Netlify folder
+.netlify
