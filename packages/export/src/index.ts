@@ -9,6 +9,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { basename, join, relative, resolve } from "node:path";
@@ -21,6 +22,17 @@ import type { BindingMeta } from "@plannar/core";
 import { shadcnBindings } from "@plannar/registry-metadata";
 
 const pkgDir = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+
+function resolveCoreStyle(name: "mdx.css" | "theme.css"): string {
+  try {
+    return require.resolve(`@plannar/core/styles/${name}`);
+  } catch {
+    const fallback = join(pkgDir, "core-styles", name);
+    if (existsSync(fallback)) return fallback;
+    throw new Error(`Unable to locate @plannar/core/styles/${name}`);
+  }
+}
 
 export type ExportOptions = {
   cwd?: string;
@@ -171,9 +183,12 @@ if (root) {
     cssImports += `@import "${cssFilePathRel}";\n`;
   }
 
-  const coreStylesDir = join(pkgDir, "core-styles");
-  const mdxCssPath = join(coreStylesDir, "mdx.css").replaceAll("\\", "/");
-  const themeCssPath = join(coreStylesDir, "theme.css").replaceAll("\\", "/");
+  const mdxCssSource = resolveCoreStyle("mdx.css");
+  const themeCssSource = resolveCoreStyle("theme.css");
+  copyFileSync(mdxCssSource, join(tmpDir, "plannar-core-mdx.css"));
+  copyFileSync(themeCssSource, join(tmpDir, "plannar-core-theme.css"));
+  const mdxCssPath = "./plannar-core-mdx.css";
+  const themeCssPath = "./plannar-core-theme.css";
 
   writeFileSync(
     join(tmpDir, "index.css"),
