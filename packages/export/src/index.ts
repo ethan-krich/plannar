@@ -171,12 +171,16 @@ if (root) {
     cssImports += `@import "${cssFilePathRel}";\n`;
   }
 
+  const coreStylesDir = join(pkgDir, "core-styles");
+  const mdxCssPath = join(coreStylesDir, "mdx.css").replaceAll("\\", "/");
+  const themeCssPath = join(coreStylesDir, "theme.css").replaceAll("\\", "/");
+
   writeFileSync(
     join(tmpDir, "index.css"),
     `@import "tailwindcss";
 @import "tw-animate-css";
-@import "@plannar/core/styles/mdx.css";
-@import "@plannar/core/styles/theme.css";
+@import "${mdxCssPath}";
+@import "${themeCssPath}";
 ${cssImports}@source "${sourcePath}";
 
 @custom-variant dark (&:is(.dark *));

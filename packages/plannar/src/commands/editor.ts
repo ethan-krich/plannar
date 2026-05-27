@@ -1,23 +1,22 @@
 import { defineCommand } from "citty";
 import { createServer } from "vite";
-import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { resolveConfig, merge } from "../config.js";
 
-function findEditorRoot(startDir: string): string {
-  const packagedEditor = resolve(startDir, "editor", "index.html");
-  if (existsSync(packagedEditor)) {
-    return resolve(startDir, "editor");
+function findEditorRoot(pkgDir: string): string {
+  const bundled = resolve(pkgDir, "editor");
+  if (existsSync(resolve(bundled, "vite.config.ts"))) {
+    return bundled;
   }
 
-  let dir = startDir;
+  let dir = pkgDir;
   for (let i = 0; i < 10; i++) {
-    const candidate = resolve(dir, "apps/editor/index.html");
-    if (existsSync(candidate)) return resolve(dir, "apps/editor");
+    const candidate = resolve(dir, "apps", "editor");
+    if (existsSync(resolve(candidate, "vite.config.ts"))) return candidate;
     dir = resolve(dir, "..");
   }
-  throw new Error("Could not find apps/editor relative to CLI package");
+  throw new Error("Could not find editor relative to CLI package");
 }
 
 export default defineCommand({
@@ -55,8 +54,7 @@ export default defineCommand({
       process.env.PLANNAR_META = JSON.stringify(config.meta);
     }
 
-    const pkgDir = fileURLToPath(new URL("..", import.meta.url));
-    const editorRoot = findEditorRoot(pkgDir);
+    const editorRoot = findEditorRoot(import.meta.dirname!);
     const configFile = resolve(editorRoot, "vite.config.ts");
 
     const baseServerConfig: Record<string, unknown> = {
