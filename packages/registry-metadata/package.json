@@ -1,6 +1,6 @@
 {
   "name": "@plannar/registry-metadata",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Component registry metadata for Plannar state binding",
   "license": "MIT",
   "files": [

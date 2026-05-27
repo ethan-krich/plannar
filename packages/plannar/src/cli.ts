@@ -6,7 +6,7 @@ import { join } from "node:path";
 const main = defineCommand({
   meta: {
     name: "plannar",
-    version: "0.0.0",
+    version: "1.0.0",
     description: "MDX plan editor CLI — init, preview, and export plans",
   },
   subCommands: {

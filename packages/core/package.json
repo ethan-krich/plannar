@@ -1,6 +1,6 @@
 {
   "name": "@plannar/core",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "MDX parser with state binding playground plugin",
   "license": "MIT",
   "files": [
