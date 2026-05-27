@@ -12,7 +12,10 @@ const distDir = resolve(packageDir, "dist");
 const coreDir = resolve(workspaceRoot, "packages", "core");
 const regDir = resolve(workspaceRoot, "packages", "registry-metadata");
 
+// Only build if dist is missing — re-packing here races with concurrent
+// workspace builds (e.g. apps/editor) that resolve these packages' entries.
 for (const dir of [coreDir, regDir]) {
+  if (existsSync(join(dir, "dist", "index.mjs"))) continue;
   execSync("vp pack", { cwd: dir, stdio: "inherit" });
 }
 
