@@ -9,9 +9,11 @@ Plannar turns agent-written plans into interactive MDX documents. Tabs instead o
 ## Quick start
 
 ```sh
-npx plannar init
+npx plannar@latest init
 plannar editor
 ```
+
+Node.js 18+ required.
 
 ## What's in the box
 

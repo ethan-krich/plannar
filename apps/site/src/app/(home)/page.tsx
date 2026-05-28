@@ -58,7 +58,7 @@ function Hero() {
 
       <div className="mt-6 inline-flex items-center gap-3 rounded border border-fd-border bg-fd-card px-3 py-2 font-mono text-[13px]">
         <span className="text-fd-muted-foreground">$</span>
-        <span className="text-fd-foreground">npx plannar init</span>
+        <span className="text-fd-foreground">npx plannar@latest init</span>
       </div>
 
       <div className="mt-6 flex items-center gap-6 text-[11px] font-mono text-fd-muted-foreground tracking-[0.04em]">
@@ -511,7 +511,7 @@ function Footer() {
 
           <div className="inline-flex items-center gap-3 rounded border border-fd-border bg-fd-card px-4 py-3 font-mono text-sm mb-4">
             <span className="text-fd-muted-foreground">$</span>
-            <span className="text-fd-foreground">npx plannar init</span>
+            <span className="text-fd-foreground">npx plannar@latest init</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
