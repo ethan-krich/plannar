@@ -4,7 +4,7 @@
 
 Plannar turns agent-written plans into interactive MDX documents. Tabs instead of walls of text. Live previews instead of mockups.
 
-[Docs](https://github.com/ekrich/plannar/tree/main/apps/site) · [Example](https://github.com/ekrich/plannar/tree/main/apps/site)
+[Docs](plannar.netlify.app/docs) · [Example](https://plannar.netlify.app/example)
 
 ## Quick start
 
@@ -25,7 +25,7 @@ plannar editor
 
 ## Links
 
-- [Agent skills](https://github.com/ekrich/plannar/tree/main/packages/skills/skills/plannar)
+- [Agent skills](https://github.com/ekrich/plannar/tree/main/skills/plannar/SKILL.md)
 - [GitHub Issues](https://github.com/ekrich/plannar/issues)
 
 ## Contributing
