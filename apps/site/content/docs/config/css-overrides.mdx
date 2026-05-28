@@ -16,12 +16,12 @@ Plannar ships two built-in CSS files. You can override them via `globalCss` and 
 
 1. Built-in `mdx.css`
 2. Built-in `theme.css`
-3. Your `globalCss` (default `.plannar/globals.css`)
+3. Your `globalCss` (if set)
 4. Your `cssFilePath` (if set)
 
 ## globalCss
 
-For overriding built-in styles. Scaffolded by `plannar init`.
+For overriding built-in styles. No default — set via `plannar.config.{js,ts,json}`.
 
 Override theme tokens:
 
@@ -52,7 +52,7 @@ For supplemental CSS beyond `globalCss`. No default, must be set explicitly.
 
 ```json
 {
-  "globalCss": ".plannar/globals.css",
+  "globalCss": ".plannar/theme-overrides.css",
   "cssFilePath": ".plannar/extra-utilities.css"
 }
 ```

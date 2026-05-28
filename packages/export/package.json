@@ -1,6 +1,6 @@
 {
   "name": "@plannar/export",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Export Plannar MDX plans to self-contained HTML",
   "license": "MIT",
   "files": [
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node ./scripts/copy-core-styles.mjs",
     "dev": "vp pack --watch",
     "test": "vp test",
     "check": "vp check",

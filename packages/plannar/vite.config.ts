@@ -6,7 +6,7 @@ export default defineConfig({
     format: ["esm"],
     deps: {
       neverBundle: ["vite", "@tailwindcss/vite", "@vitejs/plugin-react"],
-      alwaysBundle: ["@plannar/export"],
+      alwaysBundle: ["@plannar/export", "@plannar/core", "@plannar/registry-metadata"],
     },
     dts: {
       tsgo: true,

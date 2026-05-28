@@ -84,6 +84,24 @@ JS/TS configs are loaded with `jiti`. JSON configs are parsed directly.
 - Commit each logical change locally
 - **Push only when the user asks**, or batch pushes at end of session. Never push directly to `main`.
 
+### Changesets
+
+After every bug fix or new feature, add a changeset so the release workflow can bump versions and publish. Write a markdown file into `.changeset/` matching this format:
+
+```md
+---
+"@plannar/core": patch
+---
+
+Fixed the thing.
+```
+
+- Frontmatter lists each affected package with its bump type (`patch`, `minor`, `major`)
+- Body is a one-line summary for the changelog
+- Name the file something descriptive, e.g. `.changeset/fix-render-bug.md`
+
+Commit it alongside your changes. The release workflow on main opens a "Version Packages" PR when changesets accumulate; merging that PR bumps versions, updates changelogs, and publishes to npm.
+
 ## Review checklist (before declaring a task done)
 
 - [ ] `vp install` after pulling

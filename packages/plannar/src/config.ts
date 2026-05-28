@@ -19,22 +19,16 @@ export type PlannarConfig = {
 const DEFAULTS: PlannarConfig = {
   plannarFolder: ".plannar",
   exportsFolder: ".plannar/exports",
-  globalCss: ".plannar/index.css",
 };
 
 function applyDerivedDefaults(
   config: PlannarConfig,
   overrides: {
     exportsFolder?: boolean;
-    globalCss?: boolean;
   },
 ): PlannarConfig {
   if (!overrides.exportsFolder) {
     config.exportsFolder = `${config.plannarFolder}/exports`;
-  }
-
-  if (!overrides.globalCss) {
-    config.globalCss = `${config.plannarFolder}/index.css`;
   }
 
   return config;
@@ -111,7 +105,6 @@ export async function resolveConfig(cwd: string = process.cwd()): Promise<Planna
 
   return applyDerivedDefaults(merged, {
     exportsFolder: Boolean(localConfig?.exportsFolder || globalConfig?.exportsFolder),
-    globalCss: Boolean(localConfig?.globalCss || globalConfig?.globalCss),
   });
 }
 

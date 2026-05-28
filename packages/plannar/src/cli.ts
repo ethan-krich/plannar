@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from "citty";
+import { existsSync, rmSync } from "node:fs";
+import { join } from "node:path";
 
 const main = defineCommand({
   meta: {
     name: "plannar",
-    version: "0.0.0",
+    version: "1.0.0",
     description: "MDX plan editor CLI — init, preview, and export plans",
   },
   subCommands: {
@@ -14,5 +16,9 @@ const main = defineCommand({
     status: () => import("./commands/status.js").then((m) => m.default),
   },
 });
+
+const cwd = process.cwd();
+const junkCss = join(cwd, ".plannar", "node_modules", ".plannar-junk.css");
+if (existsSync(junkCss)) rmSync(junkCss);
 
 void runMain(main);

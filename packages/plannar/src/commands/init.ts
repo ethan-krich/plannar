@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { defineCommand } from "citty";
@@ -11,7 +11,7 @@ const componentsJson = {
   tsx: true,
   tailwind: {
     config: "",
-    css: "index.css",
+    css: "node_modules/.plannar-junk.css",
     baseColor: "neutral",
     cssVariables: true,
     prefix: "",
@@ -30,12 +30,6 @@ const componentsJson = {
   registries: {},
 };
 
-const defaultConfig = {
-  plannarFolder: ".plannar",
-  exportsFolder: ".plannar/exports",
-  globalCss: ".plannar/index.css",
-};
-
 const packageJson = {
   name: "plannar",
   private: true,
@@ -50,162 +44,102 @@ const tsconfigJson = {
       "@/*": ["./*"],
     },
   },
-  include: ["**/*.ts", "**/*.tsx"],
 };
 
-const indexCss = `@import "tailwindcss";
+const utilsTs = `import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 `;
+
+const KNOWN_VERSIONS: Record<string, string> = {
+  clsx: "^2.1.1",
+  "tailwind-merge": "^3.6.0",
+  "class-variance-authority": "^0.7.1",
+  "@base-ui/react": "^1.4.1",
+  "lucide-react": "^1.16.0",
+  "tw-animate-css": "^1.4.0",
+};
+
+function resolveVersion(pkg: string): string {
+  if (KNOWN_VERSIONS[pkg]) return KNOWN_VERSIONS[pkg];
+  try {
+    const v = execSync(`npm view ${pkg} version`, {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (v) return `^${v}`;
+  } catch {
+    // fall through
+  }
+  return "latest";
+}
 
 const samplePlan = `import { Button } from "@/components/ui/button";
 
 # Hello, Plannar!
 
-Welcome to your first plan. Plans are interactive MDX documents with
-live components powered by shadcn/ui.
+> A worked example of what a real plan looks like. Delete this file
+> when you write your first one — or keep it around as a reference.
 
-## Try It
+## Plan: add \`--dry-run\` to \`plannar export\`
 
-Type something below and watch it update in real time:
+Today \`plannar export\` writes HTML to disk immediately. Reviewers
+who just want to see *what* would be written — and where — have to
+delete the output after the fact.
+
+A \`--dry-run\` flag prints the resolved plan list, output paths,
+and total size, then exits without touching the filesystem.
+
+## Behavior
+
+Toggle the flag to see the difference:
 
 <Playground>
-  <input
-    bind="text:'Hello world'"
-    placeholder="Type something..."
-    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
-  />
-  <p>You typed: {text}</p>
-</Playground>
-
-<Playground>
-  <Button bind="count:0" onClick={() => setCount(count + 1)} variant="outline">
-    Clicked {count} times
+  <Button
+    bind="dryRun:false"
+    onClick={() => setDryRun(!dryRun)}
+    variant="outline"
+  >
+    {dryRun ? "--dry-run ON" : "--dry-run OFF"}
   </Button>
+
+  <pre className="mt-3 rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
+    {dryRun
+      ? \`$ plannar export --dry-run
+[dry-run] would write 3 plans:
+  .plannar/exports/onboarding.html   (42 KB)
+  .plannar/exports/pagination.html   (38 KB)
+  .plannar/exports/rate-limit.html   (51 KB)
+[dry-run] total: 131 KB — no files written\`
+      : \`$ plannar export
+✓ wrote .plannar/exports/onboarding.html
+✓ wrote .plannar/exports/pagination.html
+✓ wrote .plannar/exports/rate-limit.html
+3 plans exported (131 KB)\`}
+  </pre>
 </Playground>
 
-## Next Steps
+## Edge cases
 
-- Create more plans in \`.plannar/plans/\`
-- Run \`plannar editor\` to preview them
-- Run \`plannar export <name>\` to export as HTML
+- **Empty plans directory** — exit 0 with \`no plans found\` (same as today).
+- **\`--out\` set to a non-existent dir** — dry-run still validates the path and warns; no \`mkdir\`.
+- **A plan fails to compile** — dry-run reports the error and exits non-zero, matching the non-dry path.
+
+## Acceptance
+
+- [ ] \`plannar export --dry-run\` exits 0 and writes nothing
+- [ ] Output lists each plan, target path, and byte size
+- [ ] Same exit codes as a real export on compile errors
+- [ ] Covered by a test in \`packages/plannar/src/commands/export.test.ts\`
+
+## Next steps for you
+
+- Edit this file in \`.plannar/plans/hello-world.mdx\` to draft your own plan
+- Run \`plannar editor\` to preview it live with HMR
+- Run \`plannar export <name>\` to package it as a single HTML file
 `;
 
 function ask(prompt: string): Promise<string> {
@@ -216,6 +150,56 @@ function ask(prompt: string): Promise<string> {
       resolve(answer.trim());
     });
   });
+}
+
+function walkDir(dir: string, files: string[] = []): string[] {
+  if (!existsSync(dir)) return files;
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      walkDir(full, files);
+    } else if (entry.endsWith(".ts") || entry.endsWith(".tsx")) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+export function collectExternalImports(plannarDir: string): string[] {
+  const deps = new Set<string>();
+  const files = [...walkDir(join(plannarDir, "components")), ...walkDir(join(plannarDir, "lib"))];
+
+  for (const file of files) {
+    const content = readFileSync(file, "utf-8");
+    const importRe = /import\s+(?:[^'"]*\s+from\s+)?['"]([^'"]+)['"]/g;
+    let match: RegExpExecArray | null;
+    while ((match = importRe.exec(content)) !== null) {
+      const spec = match[1];
+      if (spec.startsWith("@/") || spec.startsWith(".")) continue;
+      const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+      deps.add(pkg);
+    }
+  }
+
+  return [...deps];
+}
+
+function resolveDeps(plannarDir: string): Record<string, string> {
+  const packages = collectExternalImports(plannarDir);
+
+  const existingPkgPath = join(plannarDir, "package.json");
+  if (existsSync(existingPkgPath)) {
+    const existing = JSON.parse(readFileSync(existingPkgPath, "utf-8"));
+    for (const key of Object.keys(existing.dependencies ?? {})) {
+      packages.push(key);
+    }
+  }
+
+  const deps: Record<string, string> = {};
+  for (const pkg of [...new Set(packages)].sort()) {
+    deps[pkg] = resolveVersion(pkg);
+  }
+  return deps;
 }
 
 const SKILL_SOURCE = "ethan-krich/plannar@plannar";
@@ -229,18 +213,14 @@ export default defineCommand({
     const cwd = process.cwd();
     const plannarDir = join(cwd, ".plannar");
     const plansDir = join(plannarDir, "plans");
+    const nodeModulesDir = join(plannarDir, "node_modules");
 
     mkdirSync(plansDir, { recursive: true });
+    mkdirSync(nodeModulesDir, { recursive: true });
 
     writeFileSync(
       join(plannarDir, "components.json"),
       JSON.stringify(componentsJson, null, 2) + "\n",
-      "utf-8",
-    );
-
-    writeFileSync(
-      join(plannarDir, "config.json"),
-      JSON.stringify(defaultConfig, null, 2) + "\n",
       "utf-8",
     );
 
@@ -256,18 +236,54 @@ export default defineCommand({
       "utf-8",
     );
 
-    writeFileSync(join(plannarDir, "index.css"), indexCss, "utf-8");
+    mkdirSync(join(plannarDir, "lib"), { recursive: true });
+    writeFileSync(join(plannarDir, "lib", "utils.ts"), utilsTs, "utf-8");
+
+    writeFileSync(
+      join(nodeModulesDir, ".plannar-junk.css"),
+      "/* plannar — styles are managed by the editor, not shadcn */\n",
+      "utf-8",
+    );
 
     writeFileSync(join(plansDir, "hello-world.mdx"), samplePlan, "utf-8");
 
     console.log("✓ Initialized .plannar/");
-    console.log("  └── components.json   (shadcn/ui registry)");
-    console.log("  └── config.json        (project config)");
-    console.log("  └── index.css           (shadcn theme + overrides)");
-    console.log("  └── package.json       (npm package)");
-    console.log("  └── tsconfig.json      (TypeScript config)");
+    console.log("  └── components.json      (shadcn/ui registry)");
+    console.log("  └── package.json         (npm package)");
+    console.log("  └── tsconfig.json        (TypeScript config)");
+    console.log("  └── lib/");
+    console.log("       └── utils.ts         (cn utility)");
+    console.log("  └── node_modules/");
+    console.log("       └── .plannar-junk.css");
     console.log("  └── plans/");
     console.log("       └── hello-world.mdx");
+    console.log("\nInstalling shadcn/ui components...\n");
+
+    try {
+      execSync("npx shadcn@latest add button", {
+        cwd: plannarDir,
+        stdio: "inherit",
+      });
+
+      const deps = resolveDeps(plannarDir);
+      const pkg = { ...packageJson, dependencies: deps };
+      writeFileSync(join(plannarDir, "package.json"), JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+
+      console.log("\nInstalling dependencies...\n");
+      execSync("npm install", {
+        cwd: plannarDir,
+        stdio: "inherit",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+      console.error("\nSetup failed:");
+      console.error(message);
+      console.error("\nYou can complete it manually:");
+      console.error(`  cd ${plannarDir} && npx shadcn@latest add button && npm install`);
+      process.exitCode = 1;
+      return;
+    }
+
     console.log("\nRun 'plannar editor' to preview your plans.");
 
     if (!process.stdin.isTTY) return;
@@ -282,9 +298,13 @@ export default defineCommand({
     console.log("\nInstalling plannar agent skill...\n");
     try {
       execSync(`npx skills add ${SKILL_SOURCE}`, { stdio: "inherit" });
-    } catch {
-      console.log("Skill installation failed. You can install it manually:");
-      console.log("  npx skills add " + SKILL_SOURCE);
+    } catch (err) {
+      const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+      console.error("\nSkill installation failed:");
+      console.error(message);
+      console.error("\nYou can install it manually:");
+      console.error("  npx skills add " + SKILL_SOURCE);
+      process.exitCode = 1;
     }
   },
 });
