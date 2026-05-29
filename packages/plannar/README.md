@@ -12,7 +12,7 @@ Plannar turns agent-written plans into interactive MDX documents. 📑 Tabs inst
 
 [📚 Docs](https://plannar.netlify.app/docs) · [🎨 Example](https://plannar.netlify.app/example)
 
-![Plannar editor preview](./assets/editor-screenshot.png)
+![Plannar editor preview](https://github.com/ethan-krich/plannar/blob/main/packages/plannar/assets/editor-screenshot.png)
 
 ## 🚀 Quick start
 
