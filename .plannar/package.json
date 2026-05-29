@@ -3,15 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@base-ui/react": "catalog:",
-    "class-variance-authority": "catalog:",
-    "clsx": "catalog:",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "tailwind-merge": "catalog:"
-  },
-  "devDependencies": {
-    "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.0"
+    "@base-ui/react": "^1.4.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.6.0"
   }
 }
