@@ -85,30 +85,17 @@ importers:
   .plannar:
     dependencies:
       '@base-ui/react':
-        specifier: 'catalog:'
+        specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       class-variance-authority:
-        specifier: 'catalog:'
+        specifier: ^0.7.1
         version: 0.7.1
       clsx:
-        specifier: 'catalog:'
+        specifier: ^2.1.1
         version: 2.1.1
-      react:
-        specifier: ^19.1.0
-        version: 19.2.6
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.2.6(react@19.2.6)
       tailwind-merge:
-        specifier: 'catalog:'
+        specifier: ^3.6.0
         version: 3.6.0
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.0
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.1.0
-        version: 19.2.3(@types/react@19.2.14)
 
   apps/editor:
     dependencies:
