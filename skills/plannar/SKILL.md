@@ -9,6 +9,18 @@ Plannar plans are MDX files in `.plannar/plans/`. Use shadcn/ui components to ma
 
 ## Creating a plan
 
+### Prerequisite — Start the editor
+
+Before creating a plan, check if the editor is running so you can give the user a live preview URL:
+
+1. Run `npx plannar@latest status`
+2. **If not running** (`✗ Editor is not running`): tell the user to run `npx plannar@latest editor` and provide the command. Do **not** proceed until the server is running.
+3. **If running** (`✓ Editor is running at http://localhost:5173`): note the URL. After you write the plan to `.plannar/plans/<slug>.mdx`, tell the user the URL as `http://localhost:5173/<slug>` so they can open it in their browser.
+
+### Communication
+
+Always ask questions using the **chat conversation**, never through the plannar comment UI. The comment UI inside the editor is for the human user to annotate plans **after** they are written — it is not a backchannel for agent-user communication during plan creation.
+
 ### Phase 1 — Understand
 
 Read the relevant code. Launch Explore agents **in parallel** sized to the uncertainty:
@@ -32,7 +44,7 @@ In each agent prompt include: full Phase 1 context (file paths, code traces), re
 
 ### Phase 3 — Review
 
-Read the critical files the agents flagged to deepen your own understanding. Confirm the plans still match the user's intent. Use the question tool for anything material that's still unresolved.
+Read the critical files the agents flagged to deepen your own understanding. Confirm the plans still match the user's intent. Ask in chat for anything material that's still unresolved (not via the plannar comment UI).
 
 ### Phase 4 — Present
 
