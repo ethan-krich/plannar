@@ -35,7 +35,7 @@ plannar editor
 
 ## 🔗 Links
 
-- 🤖 [Agent skills](https://github.com/ekrich/plannar/tree/main/skills/plannar/SKILL.md)
+- 🤖 [Agent skills](https://github.com/ethan-krich/plannar/blob/main/skills/plannar/SKILL.md)
 - 🐛 [GitHub Issues](https://github.com/ekrich/plannar/issues)
 
 ## 🤝 Contributing
