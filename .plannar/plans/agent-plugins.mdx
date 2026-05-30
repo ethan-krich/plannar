@@ -1,0 +1,704 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+# Agent plugins for OpenCode, Claude Code & Codex CLI
+
+> Plannar integrations that expose `/create-plan` and `/export-plan` commands inside each agent's TUI — plus editor UI changes and SKILL.md updates.
+
+## Goals
+
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-6">
+  <Card>
+    <CardHeader>
+      <CardTitle>SKILL.md</CardTitle>
+      <CardDescription>Teach agents the editor workflow + chat-only communication</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-4 space-y-1 text-sm">
+        <li>
+          Add <code>npx plannar@latest status</code> prerequisite
+        </li>
+        <li>Show plan URL after writing</li>
+        <li>Mandate chat for questions, not comment UI</li>
+      </ul>
+    </CardContent>
+  </Card>
+  <Card>
+    <CardHeader>
+      <CardTitle>Agent plugins</CardTitle>
+      <CardDescription>
+        <code>/create-plan</code> + <code>/export-plan</code> for all three agents
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-4 space-y-1 text-sm">
+        <li>
+          OpenCode: <code>opencode.json</code> plugin + slash commands
+        </li>
+        <li>
+          Claude Code: <code>CLAUDE.md</code> custom commands
+        </li>
+        <li>
+          Codex CLI: <code>~/.codex/plannar-rules.md</code>
+        </li>
+      </ul>
+    </CardContent>
+  </Card>
+  <Card>
+    <CardHeader>
+      <CardTitle>Editor changes</CardTitle>
+      <CardDescription>Agent-aware comment UI with per-agent submit buttons</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-4 space-y-1 text-sm">
+        <li>
+          <code>?agent=opencode|claude|codex</code> query param
+        </li>
+        <li>"Submit to Agent" replaces "Copy" button</li>
+        <li>Per-agent branded icons</li>
+      </ul>
+    </CardContent>
+  </Card>
+  <Card>
+    <CardHeader>
+      <CardTitle>CLI additions</CardTitle>
+      <CardDescription>
+        New <code>agent-init</code> subcommand
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ul className="list-disc pl-4 space-y-1 text-sm">
+        <li>
+          <code>plannar agent-init &lt;agent&gt;</code> scaffolds config
+        </li>
+        <li>Auto-installs skill at same level as plugin</li>
+        <li>
+          <code>/create-plan</code> runs <code>plannar init</code> if needed
+        </li>
+      </ul>
+    </CardContent>
+  </Card>
+</div>
+
+<Tabs defaultValue="skill">
+  <TabsList>
+    <TabsTrigger value="skill">SKILL.md update</TabsTrigger>
+    <TabsTrigger value="editor">Editor changes</TabsTrigger>
+    <TabsTrigger value="plugins">Agent plugins</TabsTrigger>
+    <TabsTrigger value="cli">CLI additions</TabsTrigger>
+    <TabsTrigger value="flow">End-to-end flows</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="skill" className="mt-4 space-y-4">
+
+### Changes to `skills/plannar/SKILL.md`
+
+Three edits, all inside the `## Creating a plan` section.
+
+**1. Add editor prerequisite** — insert after `## Creating a plan`, before `### Phase 1 — Understand`:
+
+```markdown
+### Prerequisite — Start the editor
+
+Before creating a plan, check if the editor is running so you can give the user a live preview URL:
+
+1. Run `npx plannar@latest status`
+2. **If not running** (`✗ Editor is not running`): tell the user to run `npx plannar@latest editor` and provide the command. Do **not** proceed until the server is running.
+3. **If running** (`✓ Editor is running at http://localhost:5173`): note the URL. After you write the plan to `.plannar/plans/<slug>.mdx`, tell the user the URL as `http://localhost:5173/<slug>` so they can open it in their browser.
+```
+
+**2. Add communication rules** — insert after the prerequisite, before Phase 1:
+
+```markdown
+### Communication
+
+Always ask questions using the **chat conversation**, never through the plannar comment UI. The comment UI inside the editor is for the human user to annotate plans **after** they are written — it is not a backchannel for agent-user communication during plan creation.
+```
+
+**3. Update Phase 3** — change line 35:
+
+```diff
+- Use the question tool for anything material that's still unresolved.
++ Ask in chat for anything material that's still unresolved (not via the plannar comment UI).
+```
+
+### Files changed
+
+| File                      | Operation        |
+| ------------------------- | ---------------- |
+| `skills/plannar/SKILL.md` | 3 targeted edits |
+
+  </TabsContent>
+
+  <TabsContent value="editor" className="mt-4 space-y-4">
+
+### Editor app changes
+
+All changes are in `apps/editor/src/`. Two new files, one modified file.
+
+**New file: `agent-state.ts`** — detects the calling agent from a `?agent=` query param.
+
+```tsx
+export type AgentName = "opencode" | "claude" | "codex" | null;
+
+export type AgentConfig = {
+  name: AgentName;
+  label: string;
+  icon: string; // inline SVG string
+};
+
+const AGENTS: Record<string, AgentConfig> = {
+  opencode: { name: "opencode", label: "OpenCode", icon: "<OpenCode SVG>" },
+  claude: { name: "claude", label: "Claude Code", icon: "<Claude SVG>" },
+  codex: { name: "codex", label: "Codex CLI", icon: "<Codex SVG>" },
+};
+
+export function useAgent(): AgentConfig | null {
+  const params = new URLSearchParams(window.location.search);
+  const agent = params.get("agent")?.toLowerCase();
+  return agent && AGENTS[agent] ? AGENTS[agent] : null;
+}
+```
+
+**New file: `agent-button.tsx`** — replaces the "Generate prompt (N) / Copy" button when an agent is active.
+
+```tsx
+export function AgentButton({ agent, comments }) {
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = useCallback(() => {
+    const prompt = generatePrompt(comments);
+    void navigator.clipboard.writeText(prompt).then(() => {
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 2000);
+      toast(`Prompt copied — switch to ${agent.label} and paste (Cmd+V)`);
+    });
+  }, [agent, comments]);
+
+  return (
+    <button
+      onClick={handleSubmit}
+      className="fixed bottom-6 right-20 z-40 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg hover:bg-primary/80 transition-colors"
+    >
+      {submitted ? (
+        <Check className="size-3" />
+      ) : (
+        <span dangerouslySetInnerHTML={{ __html: agent.icon }} className="size-3" />
+      )}
+      {submitted ? "Submitted" : `Submit to ${agent.label} (${comments.length})`}
+    </button>
+  );
+}
+```
+
+**Modified file: `app.tsx`** — update `CommentTools()` to branch on `useAgent()`:
+
+```diff
+  function CommentTools() {
++   const agent = useAgent();
+    const { mode, comments } = useCommentState();
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyPrompt = useCallback(() => {
+      const prompt = generatePrompt(comments);
+      void navigator.clipboard.writeText(prompt).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }, [comments]);
+
+    if (!mode) return <CommentToggle />;
+
+    return (
+      <>
+        <CommentToggle />
+        <CommentList />
+-       {comments.length > 0 && (
++       {comments.length > 0 && agent ? (
++         <AgentButton agent={agent} comments={comments} />
++       ) : comments.length > 0 && (
+          <button onClick={handleCopyPrompt}
+            className="fixed bottom-6 right-20 z-40 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg hover:bg-primary/80 transition-colors">
+            {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+            {copied ? "Copied" : `Generate prompt (${comments.length})`}
+          </button>
+        )}
+      </>
+    );
+  }
+```
+
+<Accordion type="multiple">
+  <AccordionItem value="icons">
+    <AccordionTrigger>Agent icon sources</AccordionTrigger>
+    <AccordionContent>
+      <p className="text-sm text-muted-foreground mb-2">
+        Inline SVGs sourced from each agent's official branding. Do <strong>not</strong> generate
+        placeholder icons.
+      </p>
+      <ul className="list-disc pl-4 text-sm space-y-1">
+        <li>
+          <strong>OpenCode</strong>: Logo from <code>github.com/anomalyco/opencode</code> README or
+          website favicon
+        </li>
+        <li>
+          <strong>Claude Code</strong>: Anthropic's Claude icon from <code>anthropic.com</code>{" "}
+          brand assets
+        </li>
+        <li>
+          <strong>Codex CLI</strong>: OpenAI Codex icon from <code>openai.com</code> brand assets
+        </li>
+      </ul>
+      <p className="text-sm mt-2">
+        Inline SVG strings are stored in <code>agent-state.ts</code> as <code>icon</code> fields.
+      </p>
+    </AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="inject">
+    <AccordionTrigger>How "submit to agent" works</AccordionTrigger>
+    <AccordionContent>
+      <p className="text-sm mb-2">
+        The generated LLM prompt is written to the clipboard and a toast tells the user to switch
+        windows and paste. This is universal across all three agents — no per-agent IPC needed.
+      </p>
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+
+### Files changed
+
+| File                               | Operation                                           |
+| ---------------------------------- | --------------------------------------------------- |
+| `apps/editor/src/agent-state.ts`   | New                                                 |
+| `apps/editor/src/agent-button.tsx` | New                                                 |
+| `apps/editor/src/app.tsx`          | Modified — import `useAgent`, branch `CommentTools` |
+
+  </TabsContent>
+
+  <TabsContent value="plugins" className="mt-4 space-y-4">
+
+### Per-agent plugin files
+
+Each agent gets a different plugin format. All are scaffolded by `plannar agent-init <agent>` (see CLI tab).
+
+<Accordion type="multiple">
+  <AccordionItem value="opencode">
+    <AccordionTrigger>OpenCode</AccordionTrigger>
+    <AccordionContent>
+      <p className="text-sm mb-3">OpenCode uses an <code>opencode.json</code> config at the project root and a plugin file. Plugins can register slash commands and session hooks.</p>
+
+**Files created:**
+
+1. `<project-root>/opencode.json` — registers the plugin:
+
+```json
+{
+  "plugins": [".opencode/plannar-plugin.ts"]
+}
+```
+
+2. `.opencode/plannar-plugin.ts` — defines `/create-plan` and `/export-plan`:
+
+```ts
+import { definePlugin } from "opencode";
+
+export default definePlugin((ctx) => {
+  // /create-plan <name>
+  ctx.addCommand("create-plan", async ({ args }) => {
+    const planName = args.join("-");
+    const cwd = ctx.workspace;
+
+    // 1. Ensure .plannar/ exists
+    if (!existsSync(join(cwd, ".plannar"))) {
+      await exec("npx plannar@latest init --yes", cwd);
+    }
+
+    // 2. Check if editor is running
+    const status = await exec("npx plannar@latest status", cwd);
+    let port = 5173;
+    // ... parse port from status output ...
+
+    // 3. If not running, start editor
+    if (status.includes("not running")) {
+      exec("npx plannar@latest editor --port " + port, cwd, { detached: true });
+    }
+
+    // 4. Load the plannar skill
+    ctx.loadSkill("plannar");
+
+    // 5. Inject plan filename into context
+    ctx.setEnv("PLANNAR_PLAN_NAME", planName);
+    ctx.setEnv("PLANNAR_EDITOR_URL", `http://localhost:${port}`);
+
+    // 6. Attach plan file to session when created
+    ctx.onFileCreated(join(cwd, ".plannar", "plans", `${planName}.mdx`), (path) => {
+      ctx.readFile(path); // loads into session context
+    });
+
+    return `Create the plan. Editor URL: http://localhost:${port}/${planName}?agent=opencode`;
+  });
+
+  // /export-plan
+  ctx.addCommand("export-plan", async () => {
+    const planName = ctx.getEnv("PLANNAR_PLAN_NAME");
+    await exec(`npx plannar@latest export ${planName}`, ctx.workspace);
+  });
+
+  // Install hook — during plugin install, install the skill too
+  ctx.onInstall(async () => {
+    await exec("npx skills add ethan-krich/plannar@plannar", cwd);
+  });
+});
+```
+
+    </AccordionContent>
+
+  </AccordionItem>
+  <AccordionItem value="claude">
+    <AccordionTrigger>Claude Code</AccordionTrigger>
+    <AccordionContent>
+      <p className="text-sm mb-3">Claude Code uses <code>CLAUDE.md</code> for project-level instructions and supports slash commands via the hook system in <code>~/.claude/settings.json</code>.</p>
+
+**Files created:**
+
+1. `<project-root>/CLAUDE.md` — appended section (or new file if none exists):
+
+```markdown
+## Custom Commands
+
+### `/create-plan <name>`
+
+When invoked:
+
+1. Run `npx plannar@latest init --yes` if `.plannar/` does not exist
+2. Run `npx plannar@latest status` to check if editor is running
+3. If not running, run `npx plannar@latest editor --port 5173` in a background terminal
+4. Load the plannar skill
+5. Create the plan at `.plannar/plans/<name>.mdx`
+6. Tell the user: **Open http://localhost:5173/&lt;name&gt;?agent=claude**
+7. When the `.plannar/plans/<name>.mdx` file is created, read it and attach to session context
+
+### `/export-plan`
+
+Run: `npx plannar@latest export <current-plan-name>`
+```
+
+2. `~/.claude/settings.json` — add custom command registration:
+
+```json
+{
+  "customCommands": {
+    "create-plan": {
+      "description": "Create a plan with Plannar",
+      "args": [{ "name": "name", "required": true }]
+    },
+    "export-plan": {
+      "description": "Export the current plan to HTML"
+    }
+  }
+}
+```
+
+    </AccordionContent>
+
+  </AccordionItem>
+  <AccordionItem value="codex">
+    <AccordionTrigger>Codex CLI</AccordionTrigger>
+    <AccordionContent>
+      <p className="text-sm mb-3">Codex CLI uses <code>~/.codex/config.toml</code> for configuration and supports custom commands via rule files in <code>~/.codex/rules/</code>.</p>
+
+**Files created:**
+
+1. `<project-root>/CODEX.md` (or `~/.codex/rules/plannar.md`):
+
+```markdown
+## Plannar Commands
+
+### `/create-plan <name>`
+
+When the user invokes `/create-plan`:
+
+1. If `.plannar/` does not exist, run: `npx plannar@latest init --yes`
+2. Run `npx plannar@latest status`. If stopped, run `npx plannar@latest editor --port 5173` in the background.
+3. Load the plannar skill instructions.
+4. Create the plan file at `.plannar/plans/<name>.mdx`.
+5. Provide the user: `http://localhost:5173/<name>?agent=codex`
+6. After writing, read the plan file back into session context.
+
+### `/export-plan`
+
+Run `npx plannar@latest export <current-plan-name>`.
+```
+
+2. `~/.codex/config.toml` — (optional) add a rule reference:
+
+```toml
+[rules]
+include = ["~/.codex/rules/plannar.md"]
+```
+
+    </AccordionContent>
+
+  </AccordionItem>
+</Accordion>
+
+### Install flow: skill at same level
+
+When any agent plugin gets installed (via `plannar agent-init` or manually), the plannar skill is installed at the same scope:
+
+| Plugin scope  | Skill scope   | Command                                                          |
+| ------------- | ------------- | ---------------------------------------------------------------- |
+| Project-level | Project-level | `npx skills add ethan-krich/plannar@plannar` (from project root) |
+| Global        | Global        | `npx skills add ethan-krich/plannar@plannar -g`                  |
+
+### Files changed
+
+| File                          | Operation                             |
+| ----------------------------- | ------------------------------------- |
+| `.opencode/plannar-plugin.ts` | New — opencode plugin                 |
+| `opencode.json`               | New — opencode plugin registration    |
+| `<project>/CLAUDE.md`         | New/Append — claude code instructions |
+| `~/.claude/settings.json`     | New/Modify — claude custom commands   |
+| `~/.codex/rules/plannar.md`   | New — codex rules                     |
+| `~/.codex/config.toml`        | Modify — codex config                 |
+
+  </TabsContent>
+
+  <TabsContent value="cli" className="mt-4 space-y-4">
+
+### New CLI subcommand: `plannar agent-init`
+
+Registered in `packages/plannar/src/cli.ts`, implemented in `packages/plannar/src/commands/agent-init.ts`.
+
+```ts
+export default defineCommand({
+  meta: {
+    name: "agent-init",
+    description: "Scaffold plannar integration for a coding agent",
+  },
+  args: {
+    agent: {
+      type: "positional",
+      description: "Agent to initialize: opencode | claude | codex",
+      required: true,
+    },
+    global: {
+      type: "boolean",
+      description: "Install globally instead of project-level",
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const agent = args.agent as string;
+    const isGlobal = args.global as boolean;
+    const cwd = isGlobal ? os.homedir() : process.cwd();
+
+    // 1. Scaffold agent-specific config files
+    switch (agent) {
+      case "opencode":
+        scaffoldOpenCode(cwd);
+        break;
+      case "claude":
+        scaffoldClaudeCode(cwd, isGlobal);
+        break;
+      case "codex":
+        scaffoldCodex(cwd, isGlobal);
+        break;
+      default:
+        console.error(`Unknown agent: ${agent}`);
+        process.exit(1);
+    }
+
+    // 2. Install plannar skill at same level as plugin
+    console.log("Installing plannar skill...");
+    const scopeFlag = isGlobal ? " -g" : "";
+    execSync(`npx skills add ethan-krich/plannar@plannar${scopeFlag}`, {
+      cwd: isGlobal ? undefined : cwd,
+      stdio: "inherit",
+    });
+
+    // 3. Run plannar init if .plannar/ doesn't exist
+    const plannarDir = join(cwd, ".plannar");
+    if (!existsSync(plannarDir)) {
+      console.log("No .plannar/ found — running plannar init...");
+      execSync("npx plannar@latest init", {
+        cwd,
+        stdio: "inherit",
+        // init prompts for skill install — but we already did it
+        // Consider adding a --skip-skill flag to init
+      });
+    }
+
+    console.log(`✓ Plannar integration for ${agent} is ready.`);
+  },
+});
+```
+
+### Template files
+
+Agent config templates live next to the command: `packages/plannar/src/commands/agent-templates/`. The `scaffoldOpenCode`, `scaffoldClaudeCode`, `scaffoldCodex` helpers write from these templates.
+
+### `plannar init --yes` flag
+
+Add `--yes` (or `--no-input`) to `plannar init` so `/create-plan` can auto-initialize without prompting:
+
+```ts
+// In init.ts, add arg:
+args: {
+  yes: { type: "boolean", default: false },
+}
+// When --yes, skip stdin.isTTY check and auto-accept skill install
+```
+
+### `/create-plan` auto-init
+
+When `/create-plan` is invoked and `.plannar/` doesn't exist, the agent plugin should run:
+
+```sh
+npx plannar@latest init --yes
+```
+
+This skips the interactive prompt and auto-accepts everything (shadcn setup + skill install).
+
+### Files changed
+
+| File                                                        | Operation                                   |
+| ----------------------------------------------------------- | ------------------------------------------- |
+| `packages/plannar/src/cli.ts`                               | Modified — register `agent-init` subcommand |
+| `packages/plannar/src/commands/agent-init.ts`               | New                                         |
+| `packages/plannar/src/commands/agent-templates/opencode.ts` | New                                         |
+| `packages/plannar/src/commands/agent-templates/claude.ts`   | New                                         |
+| `packages/plannar/src/commands/agent-templates/codex.ts`    | New                                         |
+| `packages/plannar/src/commands/init.ts`                     | Modified — add `--yes` flag                 |
+
+  </TabsContent>
+
+  <TabsContent value="flow" className="mt-4 space-y-4">
+
+### `/create-plan` end-to-end
+
+```
+User types: /create-plan rate-limiter
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│ Agent plugin                                            │
+│                                                         │
+│ 1. Check .plannar/ exists?                              │
+│    ├─ No  → run `npx plannar@latest init --yes`        │
+│    └─ Yes → continue                                    │
+│                                                         │
+│ 2. Run `npx plannar@latest status`                      │
+│    ├─ Running   → note port, skip to step 4             │
+│    └─ Not found → step 3                                │
+│                                                         │
+│ 3. Start editor:                                        │
+│    `npx plannar@latest editor --port 5173` (bg)        │
+│                                                         │
+│ 4. Load plannar skill                                   │
+│                                                         │
+│ 5. Tell user:                                           │
+│    "Open http://localhost:5173/rate-limiter?agent=X"   │
+│                                                         │
+│ 6. Agent creates .plannar/plans/rate-limiter.mdx       │
+│                                                         │
+│ 7. Attach plan file to session context                  │
+└─────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+         User opens editor URL
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│ Editor (with ?agent=opencode)                           │
+│                                                         │
+│ - Plan renders normally with HMR                        │
+│ - User can toggle comment mode, annotate sections       │
+│ - Comment tools show "Submit to OpenCode" button        │
+│   instead of "Generate prompt / Copy"                   │
+│                                                         │
+│ - User clicks Submit → prompt copied to clipboard       │
+│ - Toast: "Prompt copied — switch to OpenCode (Cmd+V)"  │
+│ - User pastes prompt into agent's chat                  │
+│ - Agent addresses the comments and updates the plan     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### `/export-plan` end-to-end
+
+```
+Agent plugin calls: npx plannar@latest export <plan-name>
+                            │
+                            ▼
+                  Resolves config → exportPlan()
+                            │
+                            ▼
+                  Writes .plannar/exports/<plan-name>.html
+                            │
+                            ▼
+                  Agent shows: "Exported to .plannar/exports/rate-limiter.html"
+```
+
+### Install flow (agent-init)
+
+```
+User runs: npx plannar@latest agent-init opencode
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│ 1. Detect scope (project vs global)                     │
+│ 2. Write agent config files (.opencode/, CLAUDE.md, ...)│
+│ 3. Install plannar skill at same scope                  │
+│    `npx skills add ethan-krich/plannar@plannar [-g]`   │
+│ 4. If .plannar/ missing → `npx plannar@latest init`   │
+│ 5. Print done message                                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+  </TabsContent>
+</Tabs>
+
+---
+
+## Risk assessment
+
+| Risk                                                                        | Mitigation                                                                                                                                                                                      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenCode plugin API differs from assumptions                                | Verify against opencode docs before implementing `ctx.addCommand`, `ctx.onFileCreated`, etc.                                                                                                    |
+| Port conflicts if editor already running on different port                  | `plannar status` scans next 10 ports — if busy, use `--port N+1`                                                                                                                                |
+| Clipboard API blocked on non-localhost origins                              | Only affects remote `--host` deploys, which are edge case. Toast instructions are clear.                                                                                                        |
+| `plannar init --yes` needs stdin-is-TTY bypass                              | Add `--yes` flag. When set, skip interactive prompts and auto-accept all defaults including skill install.                                                                                      |
+| Brand icon licensing                                                        | Source from each agent's official brand kits; store as inline SVG data URIs.                                                                                                                    |
+| Skill install prompt from `init` conflicts with `agent-init` pre-installing | When `agent-init` runs before `init`, the `init` skill prompt should be non-interactive if `--yes` is passed. Create a `--skip-skill` flag on init for cases where skill was already installed. |
+
+## Acceptance
+
+- [ ] `skills/plannar/SKILL.md` updated with 3 edits (prerequisite, communication, Phase 3 wording)
+- [ ] Editor renders `?agent=opencode` → shows OpenCode-branded submit button
+- [ ] Editor renders `?agent=claude` → shows Claude-branded submit button
+- [ ] Editor renders `?agent=codex` → shows Codex-branded submit button
+- [ ] Editor without `?agent=` → shows original "Generate prompt / Copy" button
+- [ ] Submit button copies prompt to clipboard and shows toast
+- [ ] `plannar agent-init opencode` creates `.opencode/plannar-plugin.ts` + `opencode.json`
+- [ ] `plannar agent-init claude` appends/creates `CLAUDE.md` + `~/.claude/settings.json`
+- [ ] `plannar agent-init codex` creates `~/.codex/rules/plannar.md`
+- [ ] `plannar agent-init <agent>` installs skill at matching scope
+- [ ] `plannar agent-init <agent>` runs `plannar init` if `.plannar/` missing
+- [ ] `plannar init --yes` works non-interactively
+- [ ] Tests added for `agent-state.ts`, `agent-button.tsx`, `agent-init` command
+- [ ] Changeset added for `@plannar/core` (editor UI) and `plannar` (CLI)
+
+## Commit plan
+
+| Commit | Files                                                                                                     | Message                                                                  |
+| ------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1      | `skills/plannar/SKILL.md`                                                                                 | `docs: add editor status prerequisite and chat-only communication rules` |
+| 2      | `apps/editor/src/agent-state.ts`, `agent-button.tsx`, `app.tsx`                                           | `feat: agent-aware comment UI with per-agent submit buttons`             |
+| 3      | `packages/plannar/src/cli.ts`, `commands/agent-init.ts`, `commands/agent-templates/*`, `commands/init.ts` | `feat: plannar agent-init command with --yes flag on init`               |
+| 4      | Changeset files                                                                                           | `chore: add changeset for agent plugins feature`                         |
