@@ -156,7 +156,7 @@ export default defineCommand({
 
     const protocol = https ? "https" : "http";
     if (editors.length === 0) {
-      console.log("✗ No editors running");
+      console.log("No editors running.");
       return;
     }
 
@@ -165,17 +165,17 @@ export default defineCommand({
 
     if (thisProject) {
       console.log(
-        `✓ Editor running for this project at ${protocol}://${connectHost}:${thisProject.port}`,
+        `Editor running for this project at ${protocol}://${connectHost}:${thisProject.port}`,
       );
     } else {
-      console.log("✗ No editor running for this project");
+      console.log("No editor for this project");
     }
 
     if (otherEditors.length > 0) {
       console.log("");
       console.log("Other projects:");
       for (const e of otherEditors) {
-        console.log(`  ${protocol}://${connectHost}:${e.port} → ${e.root}`);
+        console.log(`Editor running at ${protocol}://${connectHost}:${e.port}`);
       }
     }
   },
