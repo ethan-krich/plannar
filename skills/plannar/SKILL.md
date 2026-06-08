@@ -135,7 +135,7 @@ Starts the plan editor dev server with HMR. Resolves project config and sets env
 
 ### `plannar status`
 
-Checks whether the editor is running, reports which are for this project vs others. Scans from the given port (default `5173`) across the next 10 ports, and verifies the server is the plannar editor (not a random Vite app) by checking for the `plannar-editor` meta tag. Respects `--port` / `--host` CLI args; also reads `viteConfig.editor.server` from JS/TS configs. Compares each running editor's plannar root (embedded via a `plannar-root` meta tag) against the current project's resolved plannar folder. If an editor matches this project it prints the URL with a success message; otherwise it prints "No editor running for this project" and lists any other editors found.
+Checks whether the editor is running, reports which are for this project vs others. Scans from the given port (default `5173`) across the next 10 ports, and verifies the server is the plannar editor (not a random Vite app) by checking for the `plannar-editor` meta tag. Respects `--port` / `--host` CLI args; also reads `viteConfig.editor.server` from JS/TS configs. Compares each running editor's plannar root (embedded via a `plannar-root` meta tag) against the current project's resolved plannar folder. If an editor matches this project it prints the URL with a success message; otherwise it prints "No editor running for this project" and lists any other editors found under an "Other projects:" heading.
 
 ## Configuration
 
