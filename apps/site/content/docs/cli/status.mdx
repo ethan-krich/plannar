@@ -1,9 +1,9 @@
 ---
 title: plannar status
-description: Check if the editor is running and on which port.
+description: Check if the editor is running, on which port, and whether it belongs to the current project.
 ---
 
-Reports the editor's status and URL.
+Reports the editor's status, URL, and project match.
 
 ## Usage
 
@@ -22,12 +22,24 @@ plannar status
 
 - Scans from given port across next 10 ports
 - Verifies server is plannar editor (checks for `plannar-editor` meta tag)
+- Extracts the running editor's plannar root from the `plannar-root` meta tag
+- Compares it against the current project's resolved plannar folder
 - Reads `viteConfig.editor.server` from JS/TS configs
 
 ## Output
 
 ```
-Editor running at http://localhost:5173
+✓ Editor running (this project) at http://localhost:5173
 ```
 
-Or: `Editor is not running`
+When the editor is running but for a different project:
+
+```
+✓ Editor running (different project) at http://localhost:5173
+```
+
+Or when no editor is running:
+
+```
+✗ Editor is not running
+```
