@@ -84,25 +84,35 @@ export function checkPort(
   });
 }
 
+export type EditorInfo = {
+  port: number;
+  root: string;
+};
+
 export async function findEditorPort(
   host: string,
   startPort: number,
   scanCount: number = 10,
   options: CheckPortOptions = {},
-): Promise<{ port: number; root: string } | null> {
-  const result = await checkPort(host, startPort, 2000, options);
-  if (result.running) return { port: startPort, root: result.root! };
+): Promise<EditorInfo | null> {
+  const editors = await findAllEditorPorts(host, startPort, scanCount, options);
+  return editors.length > 0 ? editors[0] : null;
+}
 
+export async function findAllEditorPorts(
+  host: string,
+  startPort: number,
+  scanCount: number = 10,
+  options: CheckPortOptions = {},
+): Promise<EditorInfo[]> {
+  const ports = Array.from({ length: scanCount }, (_, i) => startPort + i);
   const results = await Promise.all(
-    Array.from({ length: scanCount - 1 }, (_, i) =>
-      checkPort(host, startPort + 1 + i, 1000, options),
-    ),
+    ports.map(async (port) => {
+      const result = await checkPort(host, port, port === startPort ? 2000 : 1000, options);
+      return result.running && result.root ? { port, root: result.root } : null;
+    }),
   );
-  const idx = results.findIndex((r) => r.running);
-  if (idx >= 0) {
-    return { port: startPort + 1 + idx, root: results[idx].root! };
-  }
-  return null;
+  return results.filter((r): r is EditorInfo => r !== null);
 }
 
 export default defineCommand({
@@ -142,15 +152,31 @@ export default defineCommand({
     }
 
     const connectHost = normalizeHost(host);
-    const found = await findEditorPort(connectHost, port, 10, { https });
+    const editors = await findAllEditorPorts(connectHost, port, 10, { https });
 
     const protocol = https ? "https" : "http";
-    if (found !== null) {
-      const sameProject = found.root === currentRoot;
-      const label = sameProject ? "this project" : "different project";
-      console.log(`✓ Editor running (${label}) at ${protocol}://${connectHost}:${found.port}`);
+    if (editors.length === 0) {
+      console.log("✗ No editor is running");
+      return;
+    }
+
+    const thisProject = editors.find((e) => e.root === currentRoot);
+    const otherEditors = editors.filter((e) => e.root !== currentRoot);
+
+    if (thisProject) {
+      console.log(
+        `✓ Editor running for this project at ${protocol}://${connectHost}:${thisProject.port}`,
+      );
     } else {
-      console.log(`✗ Editor is not running`);
+      console.log("✗ No editor running for this project");
+    }
+
+    if (otherEditors.length > 0) {
+      console.log("");
+      console.log("Other editors:");
+      for (const e of otherEditors) {
+        console.log(`  ${protocol}://${connectHost}:${e.port} → ${e.root}`);
+      }
     }
   },
 });

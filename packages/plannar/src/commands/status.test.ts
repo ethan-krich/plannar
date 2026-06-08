@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { createServer } from "node:http";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { checkPort, findEditorPort, normalizeHost } from "./status.js";
+import { checkPort, findEditorPort, findAllEditorPorts, normalizeHost } from "./status.js";
 
 const rootMeta = '<meta name="plannar-root" content="/test/plannar" />';
 const editorBody = [
@@ -144,7 +144,7 @@ describe("findEditorPort", () => {
     return port;
   }
 
-  it("returns the port and root when server is on the start port", async () => {
+  it("returns the first editor when server is on the start port", async () => {
     const port = await startViteServer(0);
     const result = await findEditorPort("127.0.0.1", port, 5);
     expect(result).toEqual({ port, root: "/test/plannar" });
@@ -161,6 +161,79 @@ describe("findEditorPort", () => {
     const free = await findFreePort();
     const result = await findEditorPort("127.0.0.1", free, 3);
     expect(result).toBeNull();
+  });
+});
+
+describe("findAllEditorPorts", () => {
+  let servers: Server[] = [];
+
+  afterEach(() => {
+    for (const s of servers) s.close();
+    servers = [];
+  });
+
+  function startViteServer(port: number, root: string = "/test/plannar"): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const body = [
+        `<meta name="plannar-root" content="${root}" />`,
+        '<meta name="plannar-editor" content="true" />',
+        '<script type="module" src="/@vite/client"></script>',
+      ].join("\n");
+
+      const s = createServer((_req, res) => {
+        res.writeHead(200);
+        res.end(body);
+      });
+      servers.push(s);
+      s.once("error", reject);
+      s.listen(port, "127.0.0.1", () => resolve(getPort(s)));
+    });
+  }
+
+  async function findFreePort(): Promise<number> {
+    const tmp = createServer();
+    await new Promise<void>((r) => tmp.listen(0, "127.0.0.1", () => r()));
+    const port = (tmp.address() as AddressInfo).port;
+    await new Promise<void>((r) => tmp.close(() => r()));
+    return port;
+  }
+
+  it("returns all running editors in the scanned range", async () => {
+    const free = await findFreePort();
+    const p1 = await startViteServer(free, "/project-a/.plannar");
+    const p2 = await startViteServer(free + 2, "/project-b/.plannar");
+
+    const results = await findAllEditorPorts("127.0.0.1", free, 5);
+    expect(results).toHaveLength(2);
+    expect(results).toContainEqual({ port: p1, root: "/project-a/.plannar" });
+    expect(results).toContainEqual({ port: p2, root: "/project-b/.plannar" });
+  });
+
+  it("returns empty array when no editors are running", async () => {
+    const free = await findFreePort();
+    const results = await findAllEditorPorts("127.0.0.1", free, 3);
+    expect(results).toEqual([]);
+  });
+
+  it("skips editors without a plannar-root meta tag", async () => {
+    const free = await findFreePort();
+    const p1 = await startViteServer(free, "/project-a/.plannar");
+
+    // Start a server without the root meta
+    const s = createServer((_req, res) => {
+      res.writeHead(200);
+      res.end(
+        '<meta name="plannar-editor" content="true" />\n<script type="module" src="/@vite/client"></script>',
+      );
+    });
+    servers.push(s);
+    await new Promise<void>((r) => s.listen(free + 1, "127.0.0.1", () => r()));
+    const p2 = getPort(s);
+
+    const results = await findAllEditorPorts("127.0.0.1", free, 5);
+    expect(results).toHaveLength(1);
+    expect(results).toContainEqual({ port: p1, root: "/project-a/.plannar" });
+    expect(results).not.toContainEqual({ port: p2, root: "/project-a/.plannar" });
   });
 });
 
