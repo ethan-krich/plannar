@@ -17,7 +17,7 @@ Monorepo with packages and apps.
 - `core` — Renders MDX plans. Owns the custom `remarkStateBind` plugin which provides automatic state binding via a `bind` prop. Ships document styles so consumers don't restyle.
 
 - `export` — Generates self-contained HTML from plans. Exports `exportPlan()` with `ExportOptions`.
-- `plannar` — CLI package. Handles config loading, `init`/`editor`/`export` commands.
+- `plannar` — CLI package. Handles config loading, `init`/`editor`/`export`/`status`/`inspect`/`install-skills` commands.
 
 **apps/**
 
@@ -41,6 +41,7 @@ This project uses **Vite+** (`vp` CLI) — a toolchain wrapping Vite, Rolldown, 
 - **Tailwind v4** for all styling — config lives in `@theme` inside the global CSS file. There is no `tailwind.config.js`; do not create one.
 - Tests live **per package**, colocated as `*.test.ts(x)` next to the source they cover
 - Always add tests for new package functionality
+- **Always build after making a change** — run `pnpm --filter plannar build` or `vp run -r build` so the CLI bundle stays in sync with the source
 
 ## Don't
 

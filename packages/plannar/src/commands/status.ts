@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { get as httpGet, type ClientRequest, type IncomingMessage } from "node:http";
 import { get as httpsGet } from "node:https";
+import { resolve as resolvePath } from "node:path";
 import { resolveConfig } from "../config.js";
 
 const VITE_MARKER = "/@vite/client";
@@ -13,8 +14,18 @@ export function normalizeHost(host: string): string {
   return host;
 }
 
+function extractPlannarRoot(body: string): string | null {
+  const match = body.match(/<meta\s+name="plannar-root"\s+content="([^"]*)"/);
+  return match ? match[1] : null;
+}
+
 export type CheckPortOptions = {
   https?: boolean;
+};
+
+export type CheckPortResult = {
+  running: boolean;
+  root: string | null;
 };
 
 export function checkPort(
@@ -22,7 +33,7 @@ export function checkPort(
   port: number,
   timeout: number,
   options: CheckPortOptions = {},
-): Promise<boolean> {
+): Promise<CheckPortResult> {
   return new Promise((resolve) => {
     const protocol = options.https ? "https" : "http";
     const getFn: (
@@ -37,50 +48,71 @@ export function checkPort(
       (res) => {
         if (res.statusCode !== 200) {
           res.resume();
-          resolve(false);
+          resolve({ running: false, root: null });
           return;
         }
         let body = "";
         let received = 0;
+        let running = false;
         res.on("data", (chunk: Buffer) => {
           received += chunk.length;
           body += chunk.toString();
-          if (body.includes(VITE_MARKER) && body.includes(PLANNAR_MARKER)) {
-            req.destroy();
-            resolve(true);
-            return;
+          if (!running && body.includes(VITE_MARKER) && body.includes(PLANNAR_MARKER)) {
+            running = true;
           }
           if (received >= MAX_BODY_BYTES) {
             req.destroy();
-            resolve(false);
+            resolve({
+              running,
+              root: running ? extractPlannarRoot(body) : null,
+            });
           }
         });
-        res.on("end", () => resolve(false));
+        res.on("end", () => {
+          resolve({
+            running,
+            root: running ? extractPlannarRoot(body) : null,
+          });
+        });
       },
     );
     req.on("timeout", () => {
       req.destroy();
-      resolve(false);
+      resolve({ running: false, root: null });
     });
-    req.on("error", () => resolve(false));
+    req.on("error", () => resolve({ running: false, root: null }));
   });
 }
+
+export type EditorInfo = {
+  port: number;
+  root: string;
+};
 
 export async function findEditorPort(
   host: string,
   startPort: number,
   scanCount: number = 10,
   options: CheckPortOptions = {},
-): Promise<number | null> {
-  if (await checkPort(host, startPort, 2000, options)) return startPort;
+): Promise<EditorInfo | null> {
+  const editors = await findAllEditorPorts(host, startPort, scanCount, options);
+  return editors.length > 0 ? editors[0] : null;
+}
 
+export async function findAllEditorPorts(
+  host: string,
+  startPort: number,
+  scanCount: number = 10,
+  options: CheckPortOptions = {},
+): Promise<EditorInfo[]> {
+  const ports = Array.from({ length: scanCount }, (_, i) => startPort + i);
   const results = await Promise.all(
-    Array.from({ length: scanCount - 1 }, (_, i) =>
-      checkPort(host, startPort + 1 + i, 1000, options),
-    ),
+    ports.map(async (port) => {
+      const result = await checkPort(host, port, port === startPort ? 2000 : 1000, options);
+      return result.running && result.root ? { port, root: result.root } : null;
+    }),
   );
-  const idx = results.indexOf(true);
-  return idx >= 0 ? startPort + 1 + idx : null;
+  return results.filter((r): r is EditorInfo => r !== null);
 }
 
 export default defineCommand({
@@ -103,6 +135,7 @@ export default defineCommand({
   async run({ args }) {
     const cwd = process.cwd();
     const config = await resolveConfig(cwd);
+    const currentRoot = resolvePath(cwd, config.plannarFolder);
 
     let port = Number(args.port);
     let host = args.host as string;
@@ -119,13 +152,31 @@ export default defineCommand({
     }
 
     const connectHost = normalizeHost(host);
-    const foundPort = await findEditorPort(connectHost, port, 10, { https });
+    const editors = await findAllEditorPorts(connectHost, port, 10, { https });
 
     const protocol = https ? "https" : "http";
-    if (foundPort !== null) {
-      console.log(`✓ Editor is running at ${protocol}://${connectHost}:${foundPort}`);
+    if (editors.length === 0) {
+      console.log("No editors running.");
+      return;
+    }
+
+    const thisProject = editors.find((e) => e.root === currentRoot);
+    const otherEditors = editors.filter((e) => e.root !== currentRoot);
+
+    if (thisProject) {
+      console.log(
+        `Editor running for this project at ${protocol}://${connectHost}:${thisProject.port}`,
+      );
     } else {
-      console.log(`✗ Editor is not running`);
+      console.log("No editor for this project");
+    }
+
+    if (otherEditors.length > 0) {
+      console.log("");
+      console.log("Other projects:");
+      for (const e of otherEditors) {
+        console.log(`Editor running at ${protocol}://${connectHost}:${e.port}`);
+      }
     }
   },
 });
