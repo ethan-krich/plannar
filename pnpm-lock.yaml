@@ -65,10 +65,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      '@inquirer/prompts':
-        specifier: ^8.5.2
-        version: 8.5.2(@types/node@25.8.0)
     devDependencies:
       '@changesets/cli':
         specifier: 'catalog:'
@@ -91,9 +87,6 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      '@inquirer/prompts':
-        specifier: ^8.5.2
-        version: 8.5.2(@types/node@25.8.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
