@@ -30,15 +30,19 @@ const silentLogger: Logger = {
   hasWarned: false,
 };
 
-function silenceConsole() {
+function silenceOutput() {
   const noop = () => {};
   const originalWarn = console.warn;
   const originalError = console.error;
+  const originalStderr = process.stderr.write.bind(process.stderr);
+  const silentWrite: typeof originalStderr = (_chunk, _enc?, _cb?) => true;
   console.warn = noop;
   console.error = noop;
+  process.stderr.write = silentWrite;
   return () => {
     console.warn = originalWarn;
     console.error = originalError;
+    process.stderr.write = originalStderr;
   };
 }
 
@@ -143,10 +147,10 @@ export default defineCommand({
       ? merge(baseServerConfig, config.viteConfig.editor as Record<string, unknown>)
       : baseServerConfig;
 
-    const restoreConsole = silenceConsole();
+    silenceOutput();
+
     const server = await createServer(serverConfig as Parameters<typeof createServer>[0]);
     await server.listen();
-    restoreConsole();
 
     const urls = server.resolvedUrls;
     const port = Number(args.port);
