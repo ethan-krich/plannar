@@ -7,6 +7,14 @@ description: Use when the user asks for a plan, design doc, proposal, or impleme
 
 Plannar plans are MDX files in `.plannar/plans/`. Use shadcn/ui components to make them skimmable instead of walls of text. The agent only ever edits files in `.plannar/plans/`.
 
+This file is the planning workflow. Each layer has a reference — read the matching one when you reach it:
+
+- **`references/mdx.md`** — how to write the plan MDX: MDX-vs-markdown gotchas, layout philosophy, prose conventions. Read before authoring in Phase 4.
+- **`references/jsx.md`** — the JSX layer: shadcn components, HTML elements, the `bind` prop, and Playground.
+- **`references/cli.md`** — the Plannar CLI (`init`, `editor`, `status`, `inspect`, `install-skills`).
+- **`references/structure.md`** — the `.plannar/` folder anatomy.
+- **`references/config.md`** — `plannar.config` fields, custom bindings, and CSS overrides.
+
 ## Creating a plan
 
 ### Phase 1 — Understand
@@ -36,220 +44,14 @@ Read the critical files the agents flagged to deepen your own understanding. Con
 
 ### Phase 4 — Present
 
-Write the final plan to `.plannar/plans/<kebab-case-name>.mdx`. **This is the only file you edit.**
+Write the final plan to `.plannar/plans/<kebab-case-name>.mdx`. **This is the only file you edit.** Before authoring, read **`references/mdx.md`** for MDX rules and layout, and **`references/jsx.md`** for components and Playground.
 
-## Writing the MDX
-
-The point of MDX is layout. A plan that's all paragraphs has failed the format. Reach for:
-
-- **Tabs** — compare approaches, separate "what" from "why", split frontend/backend.
-- **Accordion** — long supporting detail most readers can skip.
-- **Card** — summary blocks: goals, risks, affected files, checklist.
-- **Playground** — interactive previews of UI being proposed.
-
-Keep prose tight. Use lists. Put paths in `code`. Use `file.ts:42` for line references.
-
-### Adding shadcn components
-
-Shadcn/ui is set up in `.plannar`. Add components with the user's preferred package manager:
+After writing the plan, **verify it compiles**. Plans are MDX + JSX, so a typo or a bad binding becomes a compile error rather than a visibly broken render — catch it before handing the plan over:
 
 ```sh
-npx shadcn@latest add accordion
+plannar inspect --plan <slug>
 ```
 
-Full registry: https://ui.shadcn.com/r
+`<slug>` is the plan filename without `.mdx` (e.g. `hello-world`). Omit `--port` — `inspect` targets the current project's editor automatically. It exits `0` if the plan compiles and `1` — printing the errors — if not. If no editor is running, start one with `plannar editor`. Fix anything it reports and re-run until clean.
 
-### Playground
-
-Use `<Playground>` to embed an interactive UI preview. Inside a Playground, the `bind` prop on any element auto-wires React state — no hooks needed.
-
-**Syntax:**
-
-- `bind="name"` → state starts as `undefined`
-- `bind="name:value"` → explicit initial value (`count:0`, `text:'Hello'`)
-- Each Playground is its own scope; duplicate bind names within one Playground error out; nested Playgrounds get independent scopes.
-
-**Registered bindings** auto-wire value + change handlers:
-
-| Element                                                                                | Type   | Datatype   |
-| -------------------------------------------------------------------------------------- | ------ | ---------- |
-| `<input>` / `<textarea>`                                                               | HTML   | `string`   |
-| `<input type="checkbox">`                                                              | HTML   | `boolean`  |
-| `<input type="number">`                                                                | HTML   | `number`   |
-| `<select>`                                                                             | HTML   | `string`   |
-| `Checkbox` / `Switch`                                                                  | shadcn | `boolean`  |
-| `Slider`                                                                               | shadcn | `number[]` |
-| `Select` / `Tabs` / `Accordion`                                                        | shadcn | `string`   |
-| `Dialog` / `Sheet` / `Drawer` / `Popover` / `Tooltip` / `DropdownMenu` / `Collapsible` | shadcn | `boolean`  |
-
-**Unregistered elements** (e.g. `<Button>`) still get the state variable plus a `setXxx` setter you wire manually:
-
-```jsx
-<Button bind="count:0" onClick={() => setCount(count + 1)}>
-  Clicks: {count}
-</Button>
-```
-
-Custom bindings can be registered by passing a `bindings` record to the plugin with entries specifying `valueProp`, `changeProp`, `extract`, and optional `inject`.
-
-**Example — slider drives a preview:**
-
-```jsx
-<Playground>
-  <Slider bind="radius:12" min={0} max={64} />
-  <div style={{ borderRadius: `${radius}px` }} className="p-6 bg-blue-500 text-white text-center">
-    {radius}px radius
-  </div>
-</Playground>
-```
-
-### Playground rules
-
-- **Don't use shadcn components for the prototype itself.** If the plan proposes a card, write the card with HTML + Tailwind. Shadcn is for _controls_ around the prototype (slider for border radius, etc.).
-- **Don't wire previews to real APIs.** A "current location" mock stays mocked.
-- **Don't reuse `.plannar` shadcn components in the actual implementation** — those are plan-only.
-- **Use Tailwind** for styling unless dynamic values force inline styles.
-
-## Plannar CLI
-
-### `plannar init`
-
-Scaffolds `.plannar/`:
-
-- `components.json` — shadcn/ui config (style `base-nova`, Tailwind v4, CSS target points to a junk file in `node_modules/`)
-- `package.json` — npm package (enables `npx shadcn add`)
-- `tsconfig.json` — TypeScript config with `@/*` path alias
-- `lib/utils.ts` — `cn` utility (clsx + tailwind-merge)
-- `node_modules/.plannar-junk.css` — dummy CSS target for shadcn, cleaned up on every CLI action
-- `plans/hello-world.mdx` — sample plan demonstrating state binding
-
-After scaffolding, runs `npx shadcn@latest add button`, scans generated files for external imports, writes them to `package.json` dependencies, and runs `npm install` so the sample plan works immediately. Then prompts to install the plannar agent skill.
-
-Config is not scaffolded into `.plannar/`. Users who need custom config create a `plannar.config.{js,ts,json}` at their project root (see Configuration below).
-
-After scaffolding, prompts to install the plannar agent skill via `plannar install-skills` (ensuring the latest version from git). The prompt is skipped when stdin is not a TTY (e.g. CI).
-
-### `plannar editor`
-
-Starts the plan editor dev server with HMR. Resolves project config and sets env vars for Vite. Accepts `--port` (default `5173`) and `--host` (default `localhost`). Deep-merges optional `viteConfig.editor` overrides from JS/TS config files.
-
-### `plannar status`
-
-Checks whether the editor is running, reports which are for this project vs others. Scans from the given port (default `5173`) across the next 10 ports, and verifies the server is the plannar editor (not a random Vite app) by checking for the `plannar-editor` meta tag. Respects `--port` / `--host` CLI args; also reads `viteConfig.editor.server` from JS/TS configs. Compares each running editor's plannar root (embedded via a `plannar-root` meta tag) against the current project's resolved plannar folder. If an editor matches this project it prints the URL with a success message; otherwise it prints "No editor running for this project" and lists any other editors found under an "Other projects:" heading.
-
-### `plannar inspect`
-
-Inspects a running plan editor for compilation errors via HTTP. Required arg `--port` (the editor port), optional `--host` (default `localhost`) and `--plan` (plan slug to check, e.g. `hello-world`). When `--plan` is given, fetches the plan's compiled module; otherwise checks the main entry module. Reads `viteConfig.editor.server` from config for host/https overrides. Exits with code 1 if errors are found, code 0 otherwise. Prints errors to stdout.
-
-### `plannar install-skills`
-
-Installs plannar agent skills from the git remote into `.agents` or `.claude` directories. Always fetches the latest version from `https://github.com/ethan-krich/plannar`.
-
-```sh
-plannar install-skills [skill...] [--local] [--global] [--agent general|claude|both] [--symlink]
-```
-
-**Options:**
-
-- `[skill...]` — Skill names to install. Omit to install all available skills.
-- `--local` — Install in the current project directory.
-- `--global` — Install in the user home directory (default when non-TTY).
-- `--agent` — Agent type: `general` (`.agents/`), `claude` (`.claude/`), or `both`.
-- `--symlink` — When installing to both agents, symlink from `.agents/` to `.claude/` instead of copying.
-
-**Interactive prompts (TTY only):**
-
-When flags aren't provided, `plannar install-skills` uses arrow-key select prompts for location and agent, and a confirm prompt for symlink:
-
-1. Arrow-key select: install location (global / local).
-2. Arrow-key select: agent type (general `.agents` / claude `.claude` / both).
-3. If both agents: confirm prompt to symlink from `.agents/` to `.claude/`.
-
-**Examples:**
-
-```sh
-# Interactive mode (TTY)
-plannar install-skills
-
-# Install specific skills globally for the general agent
-plannar install-skills plannar --global --agent general
-
-# Install multiple skills locally for both agents with symlink
-plannar install-skills plannar changesets --local --agent both --symlink
-
-# Install for claude only
-plannar install-skills plannar --agent claude
-```
-
-## Configuration
-
-Plannar resolves config merged **local > global > defaults**. JS/TS configs load via `jiti`; JSON is parsed directly. Both sources are optional.
-
-| Source | Path                                            |
-| ------ | ----------------------------------------------- |
-| Global | `~/.config/plannar/plannar.config.{js,ts,json}` |
-| Local  | `./plannar.config.{js,ts,json}` (CWD)           |
-
-### Fields
-
-| Field           | Type                           | Default              | Description                                                  |
-| --------------- | ------------------------------ | -------------------- | ------------------------------------------------------------ |
-| `plannarFolder` | `string`                       | `".plannar"`         | Root folder for plans, components, and config                |
-| `exportsFolder` | `string`                       | `".plannar/exports"` | Output directory for exported HTML                           |
-| `globalCss`     | `string?`                      | _none_               | CSS that overrides builtin styles                            |
-| `cssFilePath`   | `string?`                      | _none_               | Additional CSS loaded alongside `globalCss`                  |
-| `meta`          | `Record<string, BindingMeta>?` | _none_               | Custom component bindings merged with built-in registrations |
-| `viteConfig`    | `object?`                      | _none_               | Deep-merged Vite overrides: `{ editor?: {}, exports?: {} }`  |
-
-`exportsFolder` derives from `plannarFolder` unless set explicitly. If `plannarFolder` is `.my-plans`, `exportsFolder` becomes `.my-plans/exports`.
-
-The `meta` field registers custom component bindings so user components support the `bind` prop in Playground blocks. Each entry maps a component name to a `BindingMeta` object with `valueProp`, `changeProp`, `extract`, and optional `inject`:
-
-```js
-// plannar.config.js
-export default {
-  meta: {
-    "my-input": {
-      valueProp: "value",
-      changeProp: "onValueChange",
-      extract: "e",
-    },
-  },
-};
-```
-
-Run `plannar init` to scaffold `.plannar/` with `components.json`, `package.json`, `tsconfig.json`, `lib/utils.ts`, `node_modules/.plannar-junk.css`, and `plans/hello-world.mdx`. Init then runs `npx shadcn@latest add button` and `npm install` so the sample plan works immediately.
-
-### CSS overrides
-
-Builtin styles come from `theme.css` (shadcn tokens, fonts, reset, dark mode) and `mdx.css` (headings, code blocks, tables — scoped under `.mdx-content` with `:where()` for zero specificity). Your CSS loads **after** both:
-
-1. Builtin `mdx.css` → Builtin `theme.css` → Your `globalCss` → Your `cssFilePath`
-
-`globalCss` is for overriding builtins (no default — set via `plannar.config`). `cssFilePath` is supplemental (no default, must be explicit).
-
-Override theme tokens on `:root` / `.dark`:
-
-```css
-:root {
-  --primary: oklch(0.55 0.2 250);
-  --radius: 0.5rem;
-}
-.dark {
-  --background: oklch(0.15 0.02 250);
-}
-```
-
-Override MDX content via `.mdx-content`:
-
-```css
-.mdx-content h1 {
-  font-size: 2.5rem;
-}
-.mdx-content a {
-  color: var(--primary);
-  text-decoration: underline;
-}
-```
-
-In the editor, CSS loads via `virtual:plannar-global-css` (a Vite virtual module). In exports, files are copied to a temp directory and `@import`-ed in the generated `index.css`. Both paths produce the same load order.
+See **`references/cli.md`** for the full `inspect` reference.
