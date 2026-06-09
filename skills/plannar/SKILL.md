@@ -127,7 +127,7 @@ After scaffolding, runs `npx shadcn@latest add button`, scans generated files fo
 
 Config is not scaffolded into `.plannar/`. Users who need custom config create a `plannar.config.{js,ts,json}` at their project root (see Configuration below).
 
-After scaffolding, prompts to install the plannar agent skill via `npx skills add ethan-krich/plannar@plannar` (project-level, interactive agent selection). The prompt is skipped when stdin is not a TTY (e.g. CI).
+After scaffolding, prompts to install the plannar agent skill via `plannar install-skills` (ensuring the latest version from git). The prompt is skipped when stdin is not a TTY (e.g. CI).
 
 ### `plannar editor`
 
@@ -140,6 +140,46 @@ Checks whether the editor is running, reports which are for this project vs othe
 ### `plannar inspect`
 
 Inspects a running plan editor for compilation errors via HTTP. Required arg `--port` (the editor port), optional `--host` (default `localhost`) and `--plan` (plan slug to check, e.g. `hello-world`). When `--plan` is given, fetches the plan's compiled module; otherwise checks the main entry module. Reads `viteConfig.editor.server` from config for host/https overrides. Exits with code 1 if errors are found, code 0 otherwise. Prints errors to stdout.
+
+### `plannar install-skills`
+
+Installs plannar agent skills from the git remote into `.agents` or `.claude` directories. Always fetches the latest version from `https://github.com/ethan-krich/plannar`.
+
+```sh
+plannar install-skills [skill...] [--local] [--global] [--agent general|claude|both] [--symlink]
+```
+
+**Options:**
+
+- `[skill...]` — Skill names to install. Omit to install all available skills.
+- `--local` — Install in the current project directory.
+- `--global` — Install in the user home directory (default when non-TTY).
+- `--agent` — Agent type: `general` (`.agents/`), `claude` (`.claude/`), or `both`.
+- `--symlink` — When installing to both agents, symlink from `.agents/` to `.claude/` instead of copying.
+
+**Interactive prompts (TTY only):**
+
+When flags aren't provided, `plannar install-skills` uses arrow-key select prompts for location and agent, and a confirm prompt for symlink:
+
+1. Arrow-key select: install location (global / local).
+2. Arrow-key select: agent type (general `.agents` / claude `.claude` / both).
+3. If both agents: confirm prompt to symlink from `.agents/` to `.claude/`.
+
+**Examples:**
+
+```sh
+# Interactive mode (TTY)
+plannar install-skills
+
+# Install specific skills globally for the general agent
+plannar install-skills plannar --global --agent general
+
+# Install multiple skills locally for both agents with symlink
+plannar install-skills plannar changesets --local --agent both --symlink
+
+# Install for claude only
+plannar install-skills plannar --agent claude
+```
 
 ## Configuration
 

@@ -15,6 +15,7 @@ const main = defineCommand({
     export: () => import("./commands/export.js").then((m) => m.default),
     status: () => import("./commands/status.js").then((m) => m.default),
     inspect: () => import("./commands/inspect.js").then((m) => m.default),
+    "install-skills": () => import("./commands/install-skills.js").then((m) => m.default),
   },
 });
 

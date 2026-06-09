@@ -20,4 +20,9 @@ describe("plannar commands", () => {
     const mod = await import("./commands/status.js");
     expect(mod.default).toBeDefined();
   });
+
+  it("install-skills command can be imported", async () => {
+    const mod = await import("./commands/install-skills.js");
+    expect(mod.default).toBeDefined();
+  });
 });
