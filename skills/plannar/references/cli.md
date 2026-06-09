@@ -58,7 +58,7 @@ plannar inspect --plan my-feature
 
 ## `plannar install-skills`
 
-Installs plannar agent skills from the git remote into `.agents` or `.claude` directories. Always fetches the latest version from `https://github.com/ethan-krich/plannar`.
+Installs plannar agent skills from the git remote into `.agents` or `.claude` directories. Always fetches the latest version from `https://github.com/ethan-krich/plannar`. Copies the entire skill folder — including subdirectories like `references/` — so all skill resources are available locally.
 
 ```sh
 plannar install-skills [skill...] [--local] [--global] [--agent general|claude|both] [--symlink]

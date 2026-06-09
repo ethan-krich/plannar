@@ -7,9 +7,11 @@ import {
   mkdirSync,
   lstatSync,
   readFileSync,
+  readdirSync,
+  statSync,
 } from "node:fs";
 import { tmpdir, homedir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
 const { execSpy, selectMock, confirmMock, checkboxMock } = vi.hoisted(() => ({
   execSpy: vi.fn(),
@@ -30,13 +32,37 @@ function useTempDir(label: string): string {
   return mkdtempSync(join(tmpdir(), `plannar-install-skills-${label}-`));
 }
 
-function createFakeSkillRepo(repoDir: string, skills: Record<string, string>) {
+type SkillFiles = string | Record<string, string>;
+
+function createFakeSkillRepo(repoDir: string, skills: Record<string, SkillFiles>) {
   const skillsDir = join(repoDir, "skills");
   mkdirSync(skillsDir, { recursive: true });
-  for (const [name, content] of Object.entries(skills)) {
-    mkdirSync(join(skillsDir, name), { recursive: true });
-    writeFileSync(join(skillsDir, name, "SKILL.md"), content, "utf-8");
+  for (const [name, files] of Object.entries(skills)) {
+    const skillDir = join(skillsDir, name);
+    mkdirSync(skillDir, { recursive: true });
+    if (typeof files === "string") {
+      writeFileSync(join(skillDir, "SKILL.md"), files, "utf-8");
+    } else {
+      for (const [relPath, content] of Object.entries(files)) {
+        const fullPath = join(skillDir, relPath);
+        mkdirSync(dirname(fullPath), { recursive: true });
+        writeFileSync(fullPath, content, "utf-8");
+      }
+    }
   }
+}
+
+function readdirRecursive(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      results.push(...readdirRecursive(full).map((p) => join(entry, p)));
+    } else {
+      results.push(entry);
+    }
+  }
+  return results;
 }
 
 function cleanCloneDir() {
@@ -105,6 +131,38 @@ describe("install-skills helpers", () => {
       expect(result).toBe(true);
       expect(existsSync(join(targetDir, "plannar", "SKILL.md"))).toBe(true);
       expect(readFileSync(join(targetDir, "plannar", "SKILL.md"), "utf-8")).toBe("# Test content");
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("copySkill copies entire skill folder including subdirectories", async () => {
+    const tmp = useTempDir("copy-recursive");
+    try {
+      const repoDir = join(tmp, "repo");
+      const targetDir = join(tmp, "target");
+      createFakeSkillRepo(repoDir, {
+        plannar: {
+          "SKILL.md": "# Plannar skill",
+          "references/mdx.md": "# MDX reference",
+          "references/config.md": "# Config reference",
+        },
+      });
+      const { copySkill } = await import("./install-skills.js");
+      const result = copySkill(repoDir, "plannar", targetDir);
+      expect(result).toBe(true);
+
+      const dest = join(targetDir, "plannar");
+      expect(existsSync(dest)).toBe(true);
+      expect(readFileSync(join(dest, "SKILL.md"), "utf-8")).toBe("# Plannar skill");
+      expect(existsSync(join(dest, "references"))).toBe(true);
+      expect(readFileSync(join(dest, "references", "mdx.md"), "utf-8")).toBe("# MDX reference");
+      expect(readFileSync(join(dest, "references", "config.md"), "utf-8")).toBe(
+        "# Config reference",
+      );
+
+      const files = readdirRecursive(dest).sort();
+      expect(files).toEqual(["SKILL.md", "references/config.md", "references/mdx.md"]);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -285,6 +343,83 @@ describe("install-skills command", () => {
 
       expect(existsSync(join(tmp, ".agents", "skills", "plannar", "SKILL.md"))).toBe(true);
       expect(existsSync(join(tmp, ".agents", "skills", "changesets", "SKILL.md"))).toBe(true);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("installs skill with subdirectories (references/)", async () => {
+    const tmp = useTempDir("cmd-recursive");
+    vi.spyOn(process, "cwd").mockReturnValue(tmp);
+
+    execSpy.mockImplementation((cmd: string) => {
+      if (typeof cmd === "string" && cmd.includes("git clone")) {
+        const match = cmd.match(/"([^"]+)"/);
+        if (match) {
+          createFakeSkillRepo(match[1], {
+            plannar: {
+              "SKILL.md": "# Plannar",
+              "references/cli.md": "# CLI",
+              "references/mdx.md": "# MDX",
+            },
+          });
+        }
+      }
+    });
+
+    try {
+      const { default: cmd } = await import("./install-skills.js");
+      await cmd.run!({
+        args: { local: true, global: false, agent: "general", symlink: false },
+        rawArgs: ["plannar"],
+        cmd,
+      } as any);
+
+      const skillDir = join(tmp, ".agents", "skills", "plannar");
+      expect(existsSync(join(skillDir, "SKILL.md"))).toBe(true);
+      expect(existsSync(join(skillDir, "references"))).toBe(true);
+      expect(readFileSync(join(skillDir, "references", "cli.md"), "utf-8")).toBe("# CLI");
+      expect(readFileSync(join(skillDir, "references", "mdx.md"), "utf-8")).toBe("# MDX");
+
+      const files = readdirRecursive(skillDir).sort();
+      expect(files).toEqual(["SKILL.md", "references/cli.md", "references/mdx.md"]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("installs skill with subdirectories to both agents (symlink)", async () => {
+    const tmp = useTempDir("cmd-recursive-symlink");
+    vi.spyOn(process, "cwd").mockReturnValue(tmp);
+
+    execSpy.mockImplementation((cmd: string) => {
+      if (typeof cmd === "string" && cmd.includes("git clone")) {
+        const match = cmd.match(/"([^"]+)"/);
+        if (match) {
+          createFakeSkillRepo(match[1], {
+            plannar: {
+              "SKILL.md": "# Plannar",
+              "references/cli.md": "# CLI",
+            },
+          });
+        }
+      }
+    });
+
+    try {
+      const { default: cmd } = await import("./install-skills.js");
+      await cmd.run!({
+        args: { local: true, global: false, agent: "both", symlink: true },
+        rawArgs: ["plannar"],
+        cmd,
+      } as any);
+
+      const generalDir = join(tmp, ".agents", "skills", "plannar");
+      expect(readFileSync(join(generalDir, "references", "cli.md"), "utf-8")).toBe("# CLI");
+
+      const claudeDir = join(tmp, ".claude", "skills", "plannar");
+      expect(lstatSync(claudeDir).isSymbolicLink()).toBe(true);
+      expect(readFileSync(join(claudeDir, "references", "cli.md"), "utf-8")).toBe("# CLI");
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
