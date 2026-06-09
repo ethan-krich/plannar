@@ -25,6 +25,9 @@ jobs:
 
       - run: vp install
 
+      - name: Enable pnpm
+        run: corepack enable
+
       - name: Create Release Pull Request or Publish
         uses: changesets/action@v1
         with:
