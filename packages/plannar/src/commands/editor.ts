@@ -1,9 +1,74 @@
 import { defineCommand } from "citty";
-import { createServer } from "vite";
+import { createServer, type Logger } from "vite";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
+import { networkInterfaces } from "node:os";
 import { resolveConfig, merge } from "../config.js";
+
+function getNetworkIP(): string | null {
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    const interfaces = nets[name];
+    if (!interfaces) continue;
+    for (const net of interfaces) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return null;
+}
+
+const silentLogger: Logger = {
+  info: () => {},
+  warn: () => {},
+  warnOnce: () => {},
+  error: () => {},
+  clearScreen: () => {},
+  hasErrorLogged: () => false,
+  hasWarned: false,
+};
+
+function silenceConsole() {
+  const noop = () => {};
+  const originalWarn = console.warn;
+  const originalError = console.error;
+  console.warn = noop;
+  console.error = noop;
+  return () => {
+    console.warn = originalWarn;
+    console.error = originalError;
+  };
+}
+
+const BOX_W = 49;
+
+function boxLine(content: string) {
+  return `│ ${content.padEnd(BOX_W)} │`;
+}
+
+function printBanner(localUrl: string, networkUrl: string) {
+  process.stdout.write("\x1b[2J\x1b[H");
+  const bar = "─".repeat(BOX_W + 2);
+  const lines = [
+    `╭${bar}╮`,
+    boxLine(""),
+    boxLine("████  █      ███  █   █ █   █  ███  ████"),
+    boxLine("█░░░█ █░    █ ░░█ ██  █░██  █░█ ░░█ █░░░█"),
+    boxLine("████░░█░░   █████░█░█ █░█░█ █░█████░████░░"),
+    boxLine("█░░░░ █░░   █░░░█░█░░██░█░░██░█░░░█░█░░█░"),
+    boxLine("█░░░░░█████ █░░░█░█░░ █░█░░ █░█░░░█░█░░░█░"),
+    boxLine(" ░░    ░░░░░ ░░  ░░░░  ░░░░  ░░░░  ░░░░  ░"),
+    boxLine("  ░     ░░░░░ ░   ░ ░   ░ ░   ░ ░   ░ ░   ░"),
+    boxLine(""),
+    boxLine(`Local:   ${localUrl}`),
+    boxLine(`Network: ${networkUrl}`),
+    boxLine(""),
+    `╰${bar}╯`,
+  ];
+  process.stdout.write(`${lines.join("\n")}\n`);
+}
 
 function findEditorRoot(startDir: string): string {
   let dir = startDir;
@@ -63,6 +128,8 @@ export default defineCommand({
     const baseServerConfig: Record<string, unknown> = {
       configFile,
       root: editorRoot,
+      customLogger: silentLogger,
+      clearScreen: false,
       server: {
         fs: {
           allow: [editorRoot, cwd],
@@ -76,9 +143,21 @@ export default defineCommand({
       ? merge(baseServerConfig, config.viteConfig.editor as Record<string, unknown>)
       : baseServerConfig;
 
+    const restoreConsole = silenceConsole();
     const server = await createServer(serverConfig as Parameters<typeof createServer>[0]);
-
     await server.listen();
-    server.printUrls();
+    restoreConsole();
+
+    const urls = server.resolvedUrls;
+    const port = Number(args.port);
+    const localUrl = urls?.local?.[0] ?? `http://localhost:${port}/`;
+    const networkUrl =
+      urls?.network?.[0] ??
+      (() => {
+        const ip = getNetworkIP();
+        return ip ? `http://${ip}:${port}/` : "unavailable";
+      })();
+
+    printBanner(localUrl, networkUrl);
   },
 });
