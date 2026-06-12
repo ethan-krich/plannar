@@ -1,34 +1,71 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { existsSync, mkdtempSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  mkdirSync,
+  writeFileSync,
+  lstatSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 
-const { execSpy, questionCb } = vi.hoisted(() => ({
+const { execSpy, confirmMock, selectMock, checkboxMock } = vi.hoisted(() => ({
   execSpy: vi.fn(),
-  questionCb: vi.fn<(cb: (answer: string) => void) => void>(),
+  confirmMock: vi.fn(),
+  selectMock: vi.fn(),
+  checkboxMock: vi.fn(),
 }));
 
 vi.mock("node:child_process", () => ({ execSync: execSpy }));
 
-vi.mock("node:readline", () => ({
-  createInterface: () => ({
-    question: (_prompt: string, cb: (answer: string) => void) => {
-      questionCb(cb);
-      return undefined as unknown as ReturnType<typeof import("node:readline").createInterface>;
-    },
-    close: vi.fn(),
-  }),
+vi.mock("@inquirer/prompts", () => ({
+  select: selectMock,
+  confirm: confirmMock,
+  checkbox: checkboxMock,
 }));
 
 function useTempDir(label: string): string {
   return mkdtempSync(join(tmpdir(), `plannar-init-${label}-`));
 }
 
+type SkillFiles = string | Record<string, string>;
+
+function createFakeSkillRepo(repoDir: string, skills: Record<string, SkillFiles>) {
+  const skillsDir = join(repoDir, "skills");
+  mkdirSync(skillsDir, { recursive: true });
+  for (const [name, files] of Object.entries(skills)) {
+    const skillDir = join(skillsDir, name);
+    mkdirSync(skillDir, { recursive: true });
+    if (typeof files === "string") {
+      writeFileSync(join(skillDir, "SKILL.md"), files, "utf-8");
+    } else {
+      for (const [relPath, content] of Object.entries(files)) {
+        const fullPath = join(skillDir, relPath);
+        mkdirSync(dirname(fullPath), { recursive: true });
+        writeFileSync(fullPath, content, "utf-8");
+      }
+    }
+  }
+}
+
+function cleanCloneDir() {
+  try {
+    rmSync(join(tmpdir(), "plannar-init"), { recursive: true, force: true });
+  } catch {
+    // ok
+  }
+}
+
 describe("init command", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     execSpy.mockReset();
-    questionCb.mockReset();
+    confirmMock.mockReset();
+    selectMock.mockReset();
+    checkboxMock.mockReset();
+    cleanCloneDir();
   });
 
   it("creates the expected files in .plannar/", async () => {
@@ -97,6 +134,8 @@ describe("init command", () => {
     const tmp = useTempDir("no-tty");
     vi.spyOn(process, "cwd").mockReturnValue(tmp);
 
+    execSpy.mockReturnValue(Buffer.from(""));
+
     try {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
@@ -113,29 +152,83 @@ describe("init command", () => {
     }
   });
 
-  it("installs skill when user answers yes", async () => {
+  it("installs skill to local .agents when user confirms", async () => {
     const tmp = useTempDir("install-yes");
     vi.spyOn(process, "cwd").mockReturnValue(tmp);
 
     const originalIsTTY = process.stdin.isTTY;
     Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
 
-    questionCb.mockImplementation((cb: (answer: string) => void) => cb("y"));
+    confirmMock.mockResolvedValueOnce(true);
+    selectMock.mockResolvedValueOnce("local");
+    checkboxMock.mockResolvedValueOnce(["general"]);
+
+    execSpy.mockImplementation((cmd: string) => {
+      if (typeof cmd === "string" && cmd.includes("git clone")) {
+        const match = cmd.match(/"([^"]+)"/);
+        if (match) createFakeSkillRepo(match[1], { plannar: "# Plannar skill" });
+        return Buffer.from("");
+      }
+      return Buffer.from("");
+    });
 
     try {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
-      expect(execSpy).toHaveBeenCalledTimes(3);
+
       expect(execSpy).toHaveBeenNthCalledWith(
         1,
         "npx shadcn@latest add button",
         expect.any(Object),
       );
       expect(execSpy).toHaveBeenNthCalledWith(2, "npm install", expect.any(Object));
-      expect(execSpy).toHaveBeenNthCalledWith(3, "npx skills add ethan-krich/plannar@plannar", {
-        stdio: "inherit",
+
+      const skillPath = join(tmp, ".agents", "skills", "plannar", "SKILL.md");
+      expect(existsSync(skillPath)).toBe(true);
+      expect(readFileSync(skillPath, "utf-8")).toBe("# Plannar skill");
+    } finally {
+      Object.defineProperty(process.stdin, "isTTY", {
+        value: originalIsTTY,
+        configurable: true,
       });
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("installs skill to both agents with symlink", async () => {
+    const tmp = useTempDir("install-both-symlink");
+    vi.spyOn(process, "cwd").mockReturnValue(tmp);
+
+    const originalIsTTY = process.stdin.isTTY;
+    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+
+    confirmMock.mockResolvedValueOnce(true);
+    selectMock.mockResolvedValueOnce("local");
+    checkboxMock.mockResolvedValueOnce(["general", "claude"]);
+    confirmMock.mockResolvedValueOnce(true);
+
+    execSpy.mockImplementation((cmd: string) => {
+      if (typeof cmd === "string" && cmd.includes("git clone")) {
+        const match = cmd.match(/"([^"]+)"/);
+        if (match) createFakeSkillRepo(match[1], { plannar: "# Plannar skill" });
+        return Buffer.from("");
+      }
+      return Buffer.from("");
+    });
+
+    try {
+      const { default: initCmd } = await import("./init.js");
+      const runFn = (initCmd as { run: () => Promise<void> }).run;
+      await runFn();
+
+      const generalDir = join(tmp, ".agents", "skills", "plannar");
+      expect(existsSync(join(generalDir, "SKILL.md"))).toBe(true);
+
+      const claudeDir = join(tmp, ".claude", "skills", "plannar");
+      expect(existsSync(claudeDir)).toBe(true);
+      expect(lstatSync(claudeDir).isSymbolicLink()).toBe(true);
+      expect(readFileSync(join(claudeDir, "SKILL.md"), "utf-8")).toBe("# Plannar skill");
     } finally {
       Object.defineProperty(process.stdin, "isTTY", {
         value: originalIsTTY,
@@ -152,12 +245,15 @@ describe("init command", () => {
     const originalIsTTY = process.stdin.isTTY;
     Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
 
-    questionCb.mockImplementation((cb: (answer: string) => void) => cb("n"));
+    confirmMock.mockResolvedValueOnce(false);
+
+    execSpy.mockReturnValue(Buffer.from(""));
 
     try {
       const { default: initCmd } = await import("./init.js");
       const runFn = (initCmd as { run: () => Promise<void> }).run;
       await runFn();
+
       expect(execSpy).toHaveBeenCalledTimes(2);
       expect(execSpy).toHaveBeenNthCalledWith(
         1,
@@ -165,6 +261,8 @@ describe("init command", () => {
         expect.any(Object),
       );
       expect(execSpy).toHaveBeenNthCalledWith(2, "npm install", expect.any(Object));
+
+      expect(existsSync(join(tmp, ".agents", "skills"))).toBe(false);
     } finally {
       Object.defineProperty(process.stdin, "isTTY", {
         value: originalIsTTY,
