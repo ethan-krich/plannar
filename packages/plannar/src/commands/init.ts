@@ -1,8 +1,25 @@
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
-import { createInterface } from "node:readline";
+import { tmpdir } from "node:os";
 import { defineCommand } from "citty";
+import { select, confirm, checkbox } from "@inquirer/prompts";
+import {
+  cloneRepo,
+  getAvailableSkills,
+  resolveTargetDir,
+  copySkill,
+  createSymlink,
+  GIT_REMOTE,
+} from "./install-skills.js";
 
 const componentsJson = {
   $schema: "https://ui.shadcn.com/schema.json",
@@ -142,16 +159,6 @@ Toggle the flag to see the difference:
 - Run \`plannar export <name>\` to package it as a single HTML file
 `;
 
-function ask(prompt: string): Promise<string> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(prompt, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
 function walkDir(dir: string, files: string[] = []): string[] {
   if (!existsSync(dir)) return files;
   for (const entry of readdirSync(dir)) {
@@ -201,8 +208,6 @@ function resolveDeps(plannarDir: string): Record<string, string> {
   }
   return deps;
 }
-
-const SKILL_SOURCE = "ethan-krich/plannar@plannar";
 
 export default defineCommand({
   meta: {
@@ -288,23 +293,87 @@ export default defineCommand({
 
     if (!process.stdin.isTTY) return;
 
-    const answer = await ask(`\nInstall the plannar agent skill? (${SKILL_SOURCE}) [Y/n] `);
+    const shouldInstall = await confirm({
+      message: "Install the plannar agent skill?",
+      default: true,
+    });
 
-    if (answer && answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
-      console.log("Skipped skill installation. Run: npx skills add " + SKILL_SOURCE);
+    if (!shouldInstall) {
+      console.log("Skipped skill installation. Run: plannar install-skills plannar");
       return;
     }
 
-    console.log("\nInstalling plannar agent skill...\n");
+    console.log("\nFetching latest skills...");
+    const tmpDir = join(tmpdir(), "plannar-init");
+    let repoDir: string;
+
     try {
-      execSync(`npx skills add ${SKILL_SOURCE}`, { stdio: "inherit" });
+      repoDir = cloneRepo(tmpDir);
     } catch (err) {
-      const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
-      console.error("\nSkill installation failed:");
-      console.error(message);
+      console.error(
+        "Failed to clone skills repository:",
+        err instanceof Error ? err.message : String(err),
+      );
+      console.error(`Repository: ${GIT_REMOTE}`);
       console.error("\nYou can install it manually:");
-      console.error("  npx skills add " + SKILL_SOURCE);
+      console.error("  plannar install-skills plannar");
       process.exitCode = 1;
+      return;
     }
+
+    const available = getAvailableSkills(repoDir);
+    if (!available.includes("plannar")) {
+      console.error("Plannar skill not found in repository.");
+      rmSync(tmpDir, { recursive: true, force: true });
+      process.exitCode = 1;
+      return;
+    }
+
+    const location = await select<"local" | "global">({
+      message: "Install location:",
+      choices: [
+        { name: "Global (user home)", value: "global" as const },
+        { name: "Local (current project)", value: "local" as const },
+      ],
+    });
+
+    const agents = await checkbox<"general" | "claude">({
+      message: "Which agents?",
+      choices: [
+        { name: "General (.agents)", value: "general" },
+        { name: "Claude (.claude)", value: "claude" },
+      ],
+    });
+
+    if (agents.length === 0) {
+      agents.push("general");
+    }
+
+    let shouldSymlink = false;
+    if (agents.length === 2) {
+      shouldSymlink = await confirm({ message: "Symlink from .agents to .claude?" });
+    }
+
+    console.log(
+      `\nInstalling plannar skill for ${agents.join(" and ")} agent${agents.length > 1 ? "s" : ""} (${location})...\n`,
+    );
+
+    if (agents.length === 2) {
+      const generalDir = resolveTargetDir(location, "general", cwd);
+      const claudeDir = resolveTargetDir(location, "claude", cwd);
+
+      if (copySkill(repoDir, "plannar", generalDir)) {
+        if (shouldSymlink) {
+          createSymlink(generalDir, claudeDir, "plannar");
+        } else {
+          copySkill(repoDir, "plannar", claudeDir);
+        }
+      }
+    } else {
+      const targetDir = resolveTargetDir(location, agents[0], cwd);
+      copySkill(repoDir, "plannar", targetDir);
+    }
+
+    rmSync(tmpDir, { recursive: true, force: true });
   },
 });

@@ -14,9 +14,9 @@ import { tmpdir, homedir } from "node:os";
 import { defineCommand } from "citty";
 import { select, confirm, checkbox } from "@inquirer/prompts";
 
-const GIT_REMOTE = "https://github.com/ethan-krich/plannar";
+export const GIT_REMOTE = "https://github.com/ethan-krich/plannar";
 
-function cloneRepo(workDir: string): string {
+export function cloneRepo(workDir: string): string {
   const repoDir = join(workDir, "plannar-repo");
   if (existsSync(repoDir)) {
     rmSync(repoDir, { recursive: true, force: true });
