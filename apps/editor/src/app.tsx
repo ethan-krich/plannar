@@ -4,10 +4,9 @@ import { Toaster } from "./components/ui/sonner.js";
 import { CommentProvider, useCommentState } from "./comment-state.js";
 import { CommentToggle } from "./comment-toggle.js";
 import { CommentList } from "./comment-list.js";
-import { generatePrompt } from "./grep-source.js";
+import { GenerateButton } from "./generate-button.js";
 import { PlanList } from "./plan-list.js";
 import { PlanView } from "./plan-view.js";
-import { Check, Copy } from "lucide-react";
 
 function useRoute() {
   const [path, setPath] = useState(window.location.pathname);
@@ -27,16 +26,7 @@ function useRoute() {
 }
 
 function CommentTools() {
-  const { mode, comments } = useCommentState();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyPrompt = useCallback(() => {
-    const prompt = generatePrompt(comments);
-    void navigator.clipboard.writeText(prompt).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [comments]);
+  const { mode } = useCommentState();
 
   if (!mode) return <CommentToggle />;
 
@@ -44,15 +34,7 @@ function CommentTools() {
     <>
       <CommentToggle />
       <CommentList />
-      {comments.length > 0 && (
-        <button
-          onClick={handleCopyPrompt}
-          className="fixed bottom-6 right-20 z-40 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground shadow-lg hover:bg-primary/80 transition-colors"
-        >
-          {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-          {copied ? "Copied" : `Generate prompt (${comments.length})`}
-        </button>
-      )}
+      <GenerateButton />
     </>
   );
 }

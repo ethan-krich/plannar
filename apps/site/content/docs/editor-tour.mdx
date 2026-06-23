@@ -23,7 +23,13 @@ The main area renders the plan. Every Playground is interactive. HMR on every sa
 
 ## Inline comments
 
-Click **comment** (bottom-right) to enter comment mode. Highlight text or click a heading/Playground to leave feedback. Comments generate prompts the author can paste to their agent.
+Click **comment** (bottom-right) to enter comment mode. Highlight text or click a heading/Playground to leave feedback. The **generate** button (bottom-right, next to the comment toggle) turns comments into a prompt the author can hand to their agent. It's a split button: the main action runs the last-used option and the chevron opens the menu.
+
+- **Implement with Claude** — opens Claude Code in this repo with the prompt pre-filled (`claude-cli://`).
+- **Implement with Codex** — opens the Codex app on this repo with the prompt pre-filled (`codex://`).
+- **Copy prompt** — copies the prompt to your clipboard.
+
+Your last-used option is remembered in `localStorage` and becomes the default for the next plan.
 
 ## Dark mode
 

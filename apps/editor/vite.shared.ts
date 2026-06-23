@@ -228,13 +228,13 @@ type CreateEditorViteConfigOptions = {
   workspaceRoot: string;
 };
 
-function createPlannarRootMetaPlugin(plannarRoot: string): Plugin {
+function createPlannarRootMetaPlugin(plannarRoot: string, workspaceRoot: string): Plugin {
   return {
     name: "plannar-root-meta",
     transformIndexHtml(html) {
       return html.replace(
         '<meta name="plannar-editor"',
-        `<meta name="plannar-root" content="${plannarRoot}" />\n    <meta name="plannar-editor"`,
+        `<meta name="plannar-workspace" content="${workspaceRoot}" />\n    <meta name="plannar-root" content="${plannarRoot}" />\n    <meta name="plannar-editor"`,
       );
     },
   };
@@ -255,7 +255,7 @@ export function createEditorViteConfig({
       tailwindcss(),
       react(),
       mdxPlugin({ bindings, development: true }),
-      createPlannarRootMetaPlugin(plannarRoot),
+      createPlannarRootMetaPlugin(plannarRoot, workspaceRoot),
       createPlannarPlansPlugin(plansDir, bindings),
       createGlobalCssPlugin(),
       createTailwindSourcePlugin(plannarRoot),

@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: "24"
           cache: true
+      - uses: pnpm/action-setup@v4
       - run: vp install
       - run: vp check
       - run: vp run -r test
