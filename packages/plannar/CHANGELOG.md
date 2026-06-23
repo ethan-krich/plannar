@@ -1,5 +1,11 @@
 # plannar
 
+## 1.1.2
+
+### Patch Changes
+
+- 4183157: Fixed `init` command to reuse the same clone-and-copy skill installation as `install-skills`, replacing the `npx skills add` delegation.
+
 ## 1.1.1
 
 ### Patch Changes
