@@ -1,5 +1,11 @@
 # plannar
 
+## 1.1.1
+
+### Patch Changes
+
+- 60a2e47: Added editor generate actions for Claude, Codex, and prompt copying.
+
 ## 1.1.0
 
 ### Minor Changes
